@@ -1,13 +1,13 @@
 package de.stereotypez.deidentifhir.codegen
 
 import com.typesafe.scalalogging.LazyLogging
-import de.stereotypez.deidentifhir.{DeidentifhirUtils, FhirProperty}
-import de.stereotypez.deidentifhir.DeidentifhirUtils._
-import org.hl7.fhir.r4.model.{Base, BaseResource, Element}
+import de.stereotypez.deidentifhir.util.Hapi
+import de.stereotypez.deidentifhir.util.Hapi._
+import org.hl7.fhir.r4.model.{Base, BaseResource}
 import org.reflections.Reflections
 
-import java.io.{FileOutputStream, OutputStream, PrintWriter}
-import java.lang.reflect.{Modifier, ParameterizedType, Type}
+import java.io.{FileOutputStream, PrintWriter}
+import java.lang.reflect.{Modifier, ParameterizedType}
 import java.nio.file.{Files, Path, Paths}
 import scala.jdk.CollectionConverters.CollectionHasAsScala
 import scala.util.{Success, Try, Using}
@@ -63,7 +63,7 @@ object ProfileGenerator extends App with LazyLogging {
       case c if Modifier.isAbstract(c.getModifiers) => Seq()
       case c =>
         val r = c.getDeclaredConstructor().newInstance()
-        val cc = DeidentifhirUtils.getChildren(r)
+        val cc = Hapi.getChildren(r)
         val ccc: Seq[String] = cc
           .filterNot(child => Seq("id", "extension").contains(child.field.getName))
           .filterNot(child => fhirCircuitBreak(child.field.getName, path))
@@ -74,7 +74,7 @@ object ProfileGenerator extends App with LazyLogging {
                 (targs.head.asInstanceOf[Class[_]], child.field.getName)
               }
             case child => child.field.getType
-              Try(child.field.getType, child.field.getName)
+              Try((child.field.getType, child.field.getName))
           }
           .collect {
             case Success((c, n)) if classOf[Base].isAssignableFrom(c) =>

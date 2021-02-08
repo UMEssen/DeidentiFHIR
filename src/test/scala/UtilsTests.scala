@@ -1,4 +1,4 @@
-import de.stereotypez.deidentifhir.DeidentifhirUtils
+import de.stereotypez.deidentifhir.util.Hapi
 import org.hl7.fhir.r4.model.{HumanName, ImagingStudy, Period}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -17,7 +17,7 @@ new ImagingStudy()
   hn.setText("Lorem ipsum")
   hn.setPeriod(new Period().setStart(new Date(new Date().getTime - 123456)).setEnd(new Date()))
 
-  DeidentifhirUtils.getChildrenWithValue(hn).map { case (fp, value) =>
+  Hapi.getChildrenWithValue(hn).map { case (fp, value) =>
     println(s"${fp.property.getName} [${fp.field.getType}]: $value")
   }
 

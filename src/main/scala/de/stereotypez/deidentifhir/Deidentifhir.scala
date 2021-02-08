@@ -2,8 +2,9 @@ package de.stereotypez.deidentifhir
 
 import com.typesafe.scalalogging.LazyLogging
 import de.stereotypez.deidentifhir.Deidentifhir.DeidentifhirHandler
-import de.stereotypez.deidentifhir.DeidentifhirUtils._
-import org.hl7.fhir.r4.model.{Base, Bundle, PrimitiveType, Resource, Type}
+import de.stereotypez.deidentifhir.util.Hapi._
+import de.stereotypez.deidentifhir.util.Reflection.getAccessibleField
+import org.hl7.fhir.r4.model.{Base, Bundle, Resource}
 
 import scala.jdk.CollectionConverters._
 
@@ -58,6 +59,7 @@ class Deidentifhir(pathHandlers: Map[String, Option[Seq[DeidentifhirHandler[Any]
     case v: Base if v.isPrimitive =>
       applyHandlers(path, v)
     case v: Base =>
+      // recurse
       deidentifyWrapper(path, v)
     case v: java.util.List[_] =>
       v.asScala

@@ -1,16 +1,14 @@
-package de.stereotypez.deidentifhir
+package de.stereotypez.deidentifhir.util
 
-import org.hl7.fhir.r4.model.{Base, PrimitiveType, Property, Type}
-import org.reflections.Reflections
+import org.hl7.fhir.r4.model.{Base, Property}
 
-import java.lang.reflect.{Field, Method}
+import java.lang.reflect.Field
 import javax.lang.model.SourceVersion
-import scala.annotation.tailrec
 import scala.jdk.CollectionConverters.CollectionHasAsScala
 
 case class FhirProperty(property: Property, field: Field)
 
-object DeidentifhirUtils {
+object Hapi {
 
   def nameToField(name: String): String = {
     name match {
@@ -20,45 +18,9 @@ object DeidentifhirUtils {
     }
   }
 
-  @tailrec
-  def getAccessibleField(clazz: Class[_], fieldName: String): Field =
-    try {
-      val field = clazz.getDeclaredField(nameToField(fieldName))
-      field.setAccessible(true)
-      field
-    }
-    catch {
-      case e: NoSuchFieldException =>
-        val superClass = clazz.getSuperclass
-        if (superClass == null) throw e
-        else getAccessibleField(superClass, fieldName);
-    }
-
-  private val types = new Reflections("org.hl7.fhir.r4.model").getSubTypesOf(classOf[PrimitiveType[_]]).asScala.toSeq
-    .map(_.getSimpleName.toLowerCase)
-    .sorted
-
-  def hasTypeEnding(typeName: String): Boolean = {
-    types.contains(s"${typeName}type".toLowerCase)
-  }
-
-  def extractTypes(property: Property): Seq[String] = {
-    (property.getTypeCode match {
-      case typeCode if typeCode.startsWith("canonical(") =>
-        val typeMatcher = "\\(([^\\)]+)\\)".r
-        typeMatcher.findAllIn(typeCode).matchData
-          .flatMap(_.group(1).split("\\|").toSeq).toSeq
-      case typeCode =>
-        typeCode.replaceAll("\\([^)]*\\)", "").split("\\|").toSeq
-    })
-      .map(_.trim)
-      .filter(_.nonEmpty)
-      //.filterNot(t => Try(Class.forName(s"org.hl7.fhir.r4.model.$t")).isFailure)
-  }
-
   def getChildren(r: Base): Seq[FhirProperty] = {
     r.children().asScala.toSeq
-      .map { p => FhirProperty(p, getAccessibleField(r.getClass, nameToField(p.getName)))}
+      .map { p => FhirProperty(p, Reflection.getAccessibleField(r.getClass, nameToField(p.getName)))}
   }
 
   def getChildrenWithValue(r: Base): Map[FhirProperty, Any] = {
