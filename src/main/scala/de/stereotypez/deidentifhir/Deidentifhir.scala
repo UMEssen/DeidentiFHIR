@@ -4,7 +4,8 @@ import com.typesafe.scalalogging.LazyLogging
 import de.stereotypez.deidentifhir.Deidentifhir.DeidentifhirHandler
 import de.stereotypez.deidentifhir.util.Hapi._
 import de.stereotypez.deidentifhir.util.Reflection.getAccessibleField
-import org.hl7.fhir.r4.model.{Base, Bundle, Resource}
+import org.hl7.fhir.instance.model.api.{IBaseDatatype, IBaseExtension, IBaseHasExtensions}
+import org.hl7.fhir.r4.model.{Base, Bundle, PrimitiveType, Resource, Type}
 
 import scala.jdk.CollectionConverters._
 
@@ -55,10 +56,30 @@ class Deidentifhir(pathHandlers: Map[String, Option[Seq[DeidentifhirHandler[Any]
     emptyBase
   }
 
+  def deidentifyExtension(ext: IBaseExtension[_,_], path: Seq[String]): IBaseExtension[_, _] = {
+    ext.setUrl(applyHandlers(path :+ "url", ext.getUrl).asInstanceOf[String])
+    ext.setValue(applyHandlers(path :+ "value", ext.getValue).asInstanceOf[IBaseDatatype])
+    ext.getExtension.asScala.foreach {
+      case e: IBaseExtension[_, _] => deidentifyExtension(e, path :+ "extension")
+      case e => throw new RuntimeException(s"Unexpected extension type ${e}")
+    }
+    ext
+  }
+
   def deidentifyInner(emptyBase: Base, path: Seq[String])(value: Any): Any = value match {
     case v: Base if v.isPrimitive =>
+
+      if (v.isInstanceOf[IBaseHasExtensions]) {
+        v.asInstanceOf[IBaseHasExtensions].getExtension.asScala.foreach(deidentifyExtension(_, path :+ "extension"))
+      }
+
       applyHandlers(path, v)
     case v: Base =>
+
+      if (v.isInstanceOf[IBaseHasExtensions]) {
+        v.asInstanceOf[IBaseHasExtensions].getExtension.asScala.foreach(deidentifyExtension(_, path :+ "extension"))
+      }
+
       // recurse
       deidentifyWrapper(path, v)
     case v: java.util.List[_] =>

@@ -139,6 +139,11 @@
       <name>Scala-Tools Maven2 Repository</name>
       <url>http://scala-tools.org/repo-releases</url>
     </repository>
+    <repository>
+      <id>Dcm4Che</id>
+      <name>Dcm4Che Repository</name>
+      <url>https://www.dcm4che.org/maven2/</url>
+    </repository>
   </repositories>
 
   <pluginRepositories>
@@ -201,6 +206,12 @@
       <artifactId>reflections</artifactId>
       <version>0.9.12</version>
     </dependency>
+    <dependency>
+      <groupId>org.dcm4che</groupId>
+      <artifactId>dcm4che-core</artifactId>
+      <version>5.23.0</version>
+    </dependency>
+
 
     <dependency>
       <groupId>junit</groupId>

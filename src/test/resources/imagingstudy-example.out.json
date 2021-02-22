@@ -1,0 +1,10 @@
+{
+  "resourceType": "ImagingStudy",
+  "id": "example",
+  "meta": {
+    "tag": [ {
+      "code": "HTEST"
+    } ]
+  },
+  "status": "available"
+}

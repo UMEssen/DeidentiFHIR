@@ -17,5 +17,11 @@
   }, {
     "use": "maiden"
   } ],
-  "gender": "male"
+  "gender": "male",
+  "birthDate": "1974-12-25",
+  "_birthDate": {
+    "extension": [ {
+      "url": "http://hl7.org/fhir/StructureDefinition/patient-birthTime"
+    } ]
+  }
 }
