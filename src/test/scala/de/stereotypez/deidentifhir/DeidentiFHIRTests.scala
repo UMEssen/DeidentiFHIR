@@ -1,5 +1,7 @@
+package de.stereotypez.deidentifhir
+
 import ca.uhn.fhir.context.FhirContext
-import de.stereotypez.deidentifhir.{Builder, Profile}
+import com.typesafe.config.ConfigFactory
 import org.hl7.fhir.r4.model.Resource
 import org.reflections.Reflections
 import org.reflections.scanners.ResourcesScanner
@@ -16,10 +18,40 @@ class DeidentiFHIRTests extends AnyWordSpec with Matchers {
   val fctx = FhirContext.forR4()
   val parser = fctx.newJsonParser().setPrettyPrint(true)
 
-  val deidentifhir = Builder(Profile.Test).build()
-
-  Builder(Profile.Test)
-    .register()
+  val config = ConfigFactory.parseString(
+    """
+      |deidentiFHIR.profile.version=0.2
+      |modules = {
+      |  module1: {
+      |    pattern = "Patient.exists()"
+      |    base = [
+      |      "Patient"
+      |      "Patient.identifier.use"
+      |      "Patient.identifier.system"
+      |      "Patient.identifier.type.coding.system"
+      |      "Patient.active"
+      |      "Patient.gender"
+      |      "Patient.name.use"
+      |      "Patient.birthDate"
+      |      "Patient.birthDate.extension.url"
+      |    ]
+      |    paths = {
+      |    }
+      |  }
+      |  module2: {
+      |    pattern = "ImagingStudy.exists()"
+      |    base = [
+      |      "ImagingStudy"
+      |      "ImagingStudy.id"
+      |      "ImagingStudy.status"
+      |      "ImagingStudy.meta.tag.code"
+      |    ]
+      |    paths = {
+      |    }
+      |  }
+      |}
+      """.stripMargin)
+  val deidentifhir = Deidentifhir(config)
 
   new Reflections("", new ResourcesScanner()).getResources(Pattern.compile(".*\\.in\\.json")).asScala
     .foreach {

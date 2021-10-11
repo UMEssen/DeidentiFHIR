@@ -1,6 +1,6 @@
 package de.stereotypez.deidentifhir.util
 
-import org.hl7.fhir.r4.model.{Base, Property}
+import org.hl7.fhir.r4.model.{Base, Property, Type}
 
 import java.lang.reflect.Field
 import javax.lang.model.SourceVersion
@@ -9,6 +9,21 @@ import scala.jdk.CollectionConverters.CollectionHasAsScala
 case class FhirProperty(property: Property, field: Field)
 
 object Hapi {
+
+  // Reference(Practitioner|Patient|RelatedPerson|Organization)|string
+  // ->
+  // [Reference, string]
+  def getCleanedTypeCodes(property: Property): Seq[String] = {
+    // remove all class information between parenthesis using a non-greedy matcher, before splitting
+    property.getTypeCode.replaceAll("\\(.*?\\)","").split('|')
+  }
+
+  def toPathElement(property: Property, value: Any): String = {
+    property.getName match {
+      case s"$n[x]" => s"$n[${value.asInstanceOf[Type].fhirType()}]"
+      case n        => n
+    }
+  }
 
   def nameToField(name: String): String = {
     name match {

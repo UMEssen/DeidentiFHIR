@@ -3,7 +3,7 @@ package de.stereotypez.deidentifhir.codegen
 import com.typesafe.scalalogging.LazyLogging
 import de.stereotypez.deidentifhir.util.Hapi
 import de.stereotypez.deidentifhir.util.Hapi._
-import org.hl7.fhir.r4.model.{Base, BaseResource}
+import org.hl7.fhir.r4.model.{Base, BaseResource, Enumeration, MoneyQuantity, Property, SimpleQuantity, Type}
 import org.reflections.Reflections
 
 import java.io.{FileOutputStream, PrintWriter}
@@ -14,7 +14,19 @@ import scala.util.{Success, Try, Using}
 
 object ProfileGenerator extends App with LazyLogging {
 
-  //generate(System.out)
+  // maps from a FHIR type code to the corresponding class
+   val typeCodeToClassMapping = new Reflections("org.hl7.fhir.r4.model").getSubTypesOf(classOf[Type]).asScala.toSeq
+    .filterNot(_.isInterface)
+    .filterNot(c => Modifier.isAbstract(c.getModifiers))
+    .map( clazz => (clazz.getDeclaredConstructor().newInstance().fhirType(), clazz))
+    .map( value => value match {
+      // since the fhirType doesn't always match the typeCode, we need special handling for these cases. Until I can find a more generic way...
+      case (_, clazz) if clazz == classOf[SimpleQuantity] => ("SimpleQuantity", clazz)
+      case (_, clazz) if clazz == classOf[MoneyQuantity]  => ("MoneyQuantity", clazz)
+      case (_, clazz) if clazz == classOf[Enumeration[_]] => ("Enumeration", clazz)
+      case v                                              => v
+    })
+    .toMap
 
   println(s"Full profile was written to ${writeFile("src", "main", "resources", "profiles", "full.profile")(generate(_))}")
   println(s"Preliminary baseline profile was written to ${writeFile("src", "main", "resources", "profiles", "baseline.profile")(generate(_, baseline = true))}")
@@ -35,12 +47,12 @@ object ProfileGenerator extends App with LazyLogging {
       .sortBy(_.getDeclaredConstructor().newInstance().fhirType())
       .foreach { r =>
         val fhirType = r.getDeclaredConstructor().newInstance().fhirType()
-        val paths = children(r, Seq(fhirType))
+        val paths = children(r, Seq(fhirType), None)
           .filterNot { p =>
             baseline &&
             {
               val tokens = p.split("\\.").toSeq
-              tokens.exists(token => Seq("meta","extension","address","telecom", "photo").contains(token)) ||
+              tokens.exists(token => Seq("id", "meta","extension","address","telecom", "photo").contains(token)) ||
               Seq("text", "display", "description", "name", "title", "comment").contains(tokens.last) ||
               tokens.endsWith(Seq("identifier","value")) ||
               tokens.containsSlice(Seq("Patient","name"))
@@ -52,38 +64,55 @@ object ProfileGenerator extends App with LazyLogging {
       }
   }
 
-
-
-  def children[T <: Base](clazz: Class[T], path: Seq[String]): Seq[String] = {
+  def children[T <: Base](clazz: Class[T], path: Seq[String], property: Option[Property]): Seq[String] = {
 
     logger.info(s"${clazz.getSimpleName} [${path.mkString(".")}]")
 
     clazz match {
       case c if c.isInterface => Seq()
-      case c if Modifier.isAbstract(c.getModifiers) => Seq()
-      case c =>
-        val r = c.getDeclaredConstructor().newInstance()
-        val cc = Hapi.getChildren(r)
-        val ccc: Seq[String] = cc
-          .filterNot(child => Seq("id", "extension").contains(child.field.getName))
-          .filterNot(child => fhirCircuitBreak(child.field.getName, path))
-          .collect {
-            case child if classOf[java.util.List[_]].isAssignableFrom(child.field.getType) =>
-              Try{
-                val targs = child.field.getGenericType.asInstanceOf[ParameterizedType].getActualTypeArguments
-                (targs.head.asInstanceOf[Class[_]], child.field.getName)
-              }
-            case child => child.field.getType
-              Try((child.field.getType, child.field.getName))
-          }
-          .collect {
-            case Success((c, n)) if classOf[Base].isAssignableFrom(c) =>
-              children(c.asInstanceOf[Class[Base]], path :+ n)
-          }
-          .flatten
-        path.mkString(".") +: ccc
-    }
+      // to include all elements that have a choice of type, we need to handle the abstract class Type on its own
+      case c if c.getName.equals("org.hl7.fhir.r4.model.Type") => {
 
+        property match {
+          case None                                          => throw new Exception("unexpectedly missing property information!")
+          case Some(prop) if prop.getTypeCode.equals("*")    => Seq() // ignore this case for now FIXME this results in being unable to register extensions
+          case Some(prop) => {
+
+            val types = getCleanedTypeCodes(prop).map(typeCode => (typeCode, typeCodeToClassMapping.get(typeCode).get))
+            types.map{case (typeCode, clazz) => handleSingleClass(clazz, path.dropRight(1) :+ s"${path.last}[${typeCode}]")}.flatten
+          }
+        }
+      }
+      case c if Modifier.isAbstract(c.getModifiers) => Seq()
+      case c => handleSingleClass(c, path)
+
+    }
+  }
+
+  def handleSingleClass[T <: Base](clazz: Class[T], path: Seq[String]) = {
+    val r = clazz.getDeclaredConstructor().newInstance()
+    val cc = Hapi.getChildren(r)
+    val collected = cc
+      .filterNot(child => Seq("extension").contains(child.field.getName))
+      .filterNot(child => Seq("id").contains(child.field.getName) && path.size!=1) // include top level IDs like Patient.id in the profile
+      .filterNot(child => fhirCircuitBreak(child.field.getName, path))
+      .collect {
+        case child if classOf[java.util.List[_]].isAssignableFrom(child.field.getType) =>
+          Try{
+            val targs = child.field.getGenericType.asInstanceOf[ParameterizedType].getActualTypeArguments
+            (targs.head.asInstanceOf[Class[_]], child.field.getName, child.property)
+          }
+        case child => child.field.getType
+          Try((child.field.getType, child.field.getName, child.property))
+      }
+
+    val ccc: Seq[String] = collected
+      .collect {
+        case Success((c, n, p)) if classOf[Base].isAssignableFrom(c) =>
+          children(c.asInstanceOf[Class[Base]], path :+ n, Some(p))
+      }
+      .flatten
+    path.mkString(".") +: ccc
   }
 
 }

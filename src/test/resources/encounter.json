@@ -1,0 +1,17 @@
+{
+  "resourceType": "Encounter",
+  "extension": [
+    {
+      "url": "http://fhir.de/StructureDefinition/Aufnahmegrund",
+      "extension": [
+        {
+          "url": "ErsteUndZweiteStelle",
+          "valueCoding": {
+            "system": "http://fhir.de/CodeSystem/dkgev/AufnahmegrundErsteUndZweiteStelle",
+            "code": "01"
+          }
+        }
+      ]
+    }
+  ]
+}

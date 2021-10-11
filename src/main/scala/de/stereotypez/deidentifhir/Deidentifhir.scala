@@ -1,91 +1,165 @@
 package de.stereotypez.deidentifhir
 
+import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
 import de.stereotypez.deidentifhir.Deidentifhir.DeidentifhirHandler
+import de.stereotypez.deidentifhir.util.AlwaysReturnValueMap
+import de.stereotypez.deidentifhir.util.DeidentifhirUtils.{mergePathHandlers, resourceMatchesFhirPath}
 import de.stereotypez.deidentifhir.util.Hapi._
-import de.stereotypez.deidentifhir.util.Reflection.getAccessibleField
 import org.hl7.fhir.instance.model.api.{IBaseDatatype, IBaseExtension, IBaseHasExtensions}
-import org.hl7.fhir.r4.model.{Base, Bundle, PrimitiveType, Resource, Type}
+import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent
+import org.hl7.fhir.r4.model.{Base, Bundle, Resource}
 
 import scala.jdk.CollectionConverters._
 
+sealed abstract class FhirPath
+case class ProfileFhirPath(resourceType: String, canonicalProfile: String) extends FhirPath
+case class ResourceExistsPath(resourceType: String) extends FhirPath
+case class ApplyAlways() extends FhirPath
+
+case class Module(pattern: FhirPath, pathHandlers: Map[String, Option[Seq[DeidentifhirHandler[Any]]]]) // TODO add typehandlers
+
 object Deidentifhir {
-  type DeidentifhirHandler[T <: Any] = (Seq[String], T) => T
+  // each handler gets passed:
+  // 1. the path to the current element
+  // 2. the current element
+  // 3. a sequence of all elements from the root to the current element
+  type DeidentifhirHandler[T <: Any] = (Seq[String], T, Seq[Base]) => T
+
+  def apply(config: Config): Deidentifhir = {
+    // TODO check config version
+    val moduleConfigs = config.getObject("modules")
+    val moduleKeys = moduleConfigs.keySet()
+    val modules = moduleKeys.asScala.toSeq.map(key => { ModuleBuilder(moduleConfigs.toConfig.getConfig(key)).build()})
+
+    new Deidentifhir(modules, Map())
+  }
+
+  def apply(config: Config, registry: Registry): Deidentifhir = {
+    // TODO check config version
+    val moduleConfigs = config.getObject("modules")
+    val moduleKeys = moduleConfigs.keySet()
+    val modules = moduleKeys.asScala.toSeq.map(key => { ModuleBuilder(moduleConfigs.toConfig.getConfig(key), registry).build()})
+
+    new Deidentifhir(modules, Map())
+  }
+
+  def buildKeepAll() = {
+    val keepMap = new AlwaysReturnValueMap()
+    val keepModule = Module(pattern = ApplyAlways(), keepMap)
+    (new Deidentifhir(Seq(keepModule), Map()), keepMap)
+  }
 }
 
-class Deidentifhir(pathHandlers: Map[String, Option[Seq[DeidentifhirHandler[Any]]]], typeHandlers: Map[Class[_], Option[Seq[DeidentifhirHandler[Any]]]]) extends LazyLogging {
+// TODO remove typehandlers
+class Deidentifhir(modules: Seq[Module], typeHandlers: Map[Class[_], Option[Seq[DeidentifhirHandler[Any]]]]) extends LazyLogging {
 
   def deidentify(resource: Resource): Resource = {
     resource match {
       case b: Bundle =>
+        val deidentifiedBundle = new Bundle()
         b.getEntry.asScala
-          .foreach(entry => entry.setResource(deidentify(entry.getResource)))
-        b
+          .map(_.getResource)
+          .map(deidentify) // TODO filter for null?
+          .map(deidentifiedResource => {
+            new BundleEntryComponent().setResource(deidentifiedResource)
+          })
+          .foreach(deidentifiedBundle.addEntry)
+        deidentifiedBundle
       case r =>
-        deidentifyWrapper(Seq(r.fhirType), r).asInstanceOf[Resource]
+        deidentifyWrapper(Seq(r.fhirType), r, Seq()).asInstanceOf[Resource]
     }
   }
 
-  private def applyHandlers(path: Seq[String], value: Any): Any = {
+  private def applyHandlers(path: Seq[String], value: Any, context: Seq[Base]): Any = {
+
+    // only use modules whose pattern matches the current resource
+    val resource = context.head.asInstanceOf[Resource]
+    val applicableModules = modules.filter(module => {resourceMatchesFhirPath(resource, module.pattern)})
+    // get all handlers for the current path from all applicable modules
+    val mergedPathHandlers = mergePathHandlers(applicableModules.map(_.pathHandlers).map(_.get(path.mkString("."))))
+
     // type handlers have precedence
     typeHandlers.get(value.getClass)
-      .map(_.map(_.foldLeft(value)((accumulator, handler) => handler(path,accumulator))).getOrElse(value))
+      .map(_.map(_.foldLeft(value)((accumulator, handler) => handler(path, accumulator, context))).getOrElse(value))
       .orElse(Option(value))
       // now apply path handlers
       .flatMap { newvalue =>
-        pathHandlers.get(path.mkString("."))
-          .map(_.map(_.foldLeft(newvalue)((accumulator, handler) => handler(path,accumulator))).getOrElse(newvalue))
+        mergedPathHandlers
+          .map(_.map(_.foldLeft(newvalue)((accumulator, handler) => handler(path, accumulator, context))).getOrElse(newvalue))
           .orElse(None)
       }
       // if not captured by any handler setting 'null' will remove that property from a HAPI model
       .orNull
   }
 
-  def deidentifyWrapper(path: Seq[String], b: Base): Base = {
+  private def deidentifyWrapper(path: Seq[String], b: Base, context: Seq[Base]): Base = {
 
     // create empty instance to fill with white-listed attributes
     val emptyBase = b.getClass.getConstructor().newInstance()
 
-    getChildrenWithValue(b)
-      .map { case (fp, value) => (path :+ fp.property.getName, value)}
-      .foreach {
-        case (path, value) =>
-          getAccessibleField(b.getClass, path.last)
-            .set(emptyBase, deidentifyInner(emptyBase, path)(value))
+    var anyFieldSet = false;
+
+    val childrenWithValue = getChildrenWithValue(b)
+    val mappedChildrenWithValue = childrenWithValue.map { case (fp, value) => (path :+ toPathElement(fp.property, value), value, fp.field)}
+      mappedChildrenWithValue.foreach {
+        case (path, value, field) =>
+          val innerRes = deidentifyInner(path, value, context :+ b)
+          if(innerRes != null) {
+            anyFieldSet = true
+            field.set(emptyBase, innerRes)
+          }
       }
-    emptyBase
+
+    if(anyFieldSet)
+      emptyBase
+    else
+      null
   }
 
-  def deidentifyExtension(ext: IBaseExtension[_,_], path: Seq[String]): IBaseExtension[_, _] = {
-    ext.setUrl(applyHandlers(path :+ "url", ext.getUrl).asInstanceOf[String])
-    ext.setValue(applyHandlers(path :+ "value", ext.getValue).asInstanceOf[IBaseDatatype])
+  // TODO do not modify the given extension!
+  private def deidentifyExtension(ext: IBaseExtension[_,_], path: Seq[String], context: Seq[Base]): IBaseExtension[_, _] = {
+
+    // val emptyBase = ext.getClass.getConstructor().newInstance() // TODO remove this line again or merge with deidentify wrapper
+
+    // TODO the url might be null as well!
+    ext.setUrl(applyHandlers(path :+ "url", ext.getUrl, context).asInstanceOf[String])
+    if(ext.getValue != null) {
+      ext.setValue(applyHandlers(path :+ "value", ext.getValue, context).asInstanceOf[IBaseDatatype])
+    }
     ext.getExtension.asScala.foreach {
-      case e: IBaseExtension[_, _] => deidentifyExtension(e, path :+ "extension")
+      case e: IBaseExtension[_, _] => deidentifyExtension(e, path :+ "extension", context)
       case e => throw new RuntimeException(s"Unexpected extension type ${e}")
     }
     ext
   }
 
-  def deidentifyInner(emptyBase: Base, path: Seq[String])(value: Any): Any = value match {
+  private def deidentifyInner(path: Seq[String], value: Any, context: Seq[Base]): Any = value match {
     case v: Base if v.isPrimitive =>
 
       if (v.isInstanceOf[IBaseHasExtensions]) {
-        v.asInstanceOf[IBaseHasExtensions].getExtension.asScala.foreach(deidentifyExtension(_, path :+ "extension"))
+        v.asInstanceOf[IBaseHasExtensions].getExtension.asScala.foreach(deidentifyExtension(_, path :+ "extension", context))
       }
 
-      applyHandlers(path, v)
+      applyHandlers(path, v, context)
     case v: Base =>
 
       if (v.isInstanceOf[IBaseHasExtensions]) {
-        v.asInstanceOf[IBaseHasExtensions].getExtension.asScala.foreach(deidentifyExtension(_, path :+ "extension"))
+        v.asInstanceOf[IBaseHasExtensions].getExtension.asScala.foreach(deidentifyExtension(_, path :+ "extension", context))
       }
 
       // recurse
-      deidentifyWrapper(path, v)
+      deidentifyWrapper(path, v, context)
     case v: java.util.List[_] =>
-      v.asScala
-        .map(deidentifyInner(emptyBase, path)(_))
-        .toList.asJava
+      if(v.isEmpty) {
+        // remove empty lists altogether. which might be the case if the resource was parsed with HAPI FHIR
+        null
+      } else {
+        v.asScala
+          .map(deidentifyInner(path, _, context))
+          .filterNot(_ == null)
+          .toList.asJava
+      }
   }
 
 }
