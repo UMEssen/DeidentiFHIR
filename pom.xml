@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>de.stereotypez</groupId>
   <artifactId>deidentiFHIR</artifactId>
-  <version>0.2.0</version>
+  <version>0.2.1-SNAPSHOT</version>
   <name>${project.artifactId}</name>
   <description>Generic FHIR de-identification library based on HAPI FHIR</description>
   <inceptionYear>2020</inceptionYear>
