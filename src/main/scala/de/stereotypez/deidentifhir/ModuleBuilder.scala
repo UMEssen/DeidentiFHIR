@@ -136,6 +136,6 @@ class ModuleBuilder(pattern: FhirPath, fullProfilePaths: Seq[String]) {
   }
 
   def build(): Module = {
-    Module(pattern, pathHandlers.toMap) // TODO add typeHandlers
+    Module(pattern, pathHandlers.toMap, Map()) // TODO add typeHandlers
   }
 }

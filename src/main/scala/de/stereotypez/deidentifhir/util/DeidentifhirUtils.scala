@@ -29,7 +29,7 @@ object DeidentifhirUtils {
   }
 
   // TODO this code can probably be improved and made more idiomatic
-  def mergePathHandlers(list: Seq[Option[Option[Seq[DeidentifhirHandler[Any]]]]]): Option[Option[Seq[DeidentifhirHandler[Any]]]] = {
+  def mergeHandlers(list: Seq[Option[Option[Seq[DeidentifhirHandler[Any]]]]]): Option[Option[Seq[DeidentifhirHandler[Any]]]] = {
     list.filter(_.isDefined) match {
       case Nil          => None
       case filteredList => Some({

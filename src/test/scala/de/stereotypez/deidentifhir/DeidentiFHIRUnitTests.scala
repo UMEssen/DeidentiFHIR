@@ -24,8 +24,9 @@ class DeidentiFHIRUnitTests extends AnyFunSuite {
 
     val module = Module(
       pattern = ResourceExistsPath("Patient"),
-      pathHandlers = Map("Patient.address.postalCode" -> Some(Seq(nullHandler))).asInstanceOf[MapOfPathHandlers])
-    val deidentiFHIR = new Deidentifhir(Seq(module), Map())
+      pathHandlers = Map("Patient.address.postalCode" -> Some(Seq(nullHandler))).asInstanceOf[MapOfPathHandlers],
+      typeHandlers = Map())
+    val deidentiFHIR = new Deidentifhir(Seq(module))
 
     val patient = new Patient()
     patient.addAddress(new Address().setPostalCode("4478"))
@@ -46,7 +47,7 @@ class DeidentiFHIRUnitTests extends AnyFunSuite {
 
     enc.addExtension(outerExt)
 
-    val deidentifhir = new Deidentifhir(Seq(), Map())
+    val deidentifhir = new Deidentifhir(Seq())
     val pEnc : Encounter = deidentifhir.deidentify(enc).asInstanceOf[Encounter]
 
     assert(pEnc.hasExtension === false)
@@ -68,7 +69,7 @@ class DeidentiFHIRUnitTests extends AnyFunSuite {
     val patient = new Patient()
     patient.addAddress(address)
 
-    val deidentifhir = new Deidentifhir(Seq(), Map())
+    val deidentifhir = new Deidentifhir(Seq())
     val pPatient : Patient = deidentifhir.deidentify(patient).asInstanceOf[Patient]
 
     val extensions = patient.getAddressFirstRep.getExtension
@@ -104,7 +105,7 @@ class DeidentiFHIRUnitTests extends AnyFunSuite {
 
   // if Patient.meta.profile will be of size 1 but all elemnts are null, serialization will fail
   test("remove empty lists") {
-    val deidentifhir = new Deidentifhir(Seq(), Map())
+    val deidentifhir = new Deidentifhir(Seq())
 
     val patient = new Patient()
     patient.setMeta(new Meta().addProfile("dummyProfileURL"))
@@ -117,7 +118,7 @@ class DeidentiFHIRUnitTests extends AnyFunSuite {
 
   test("ChoiseOfType handling") {
     val ms = new MedicationStatement().addDosage(new Dosage().addDoseAndRate(new DosageDoseAndRateComponent().setDose(new SimpleQuantity().setValue(1).setUnit("Beutel").setSystem("test"))))
-    val deidentifhir = new Deidentifhir(Seq(), Map())
+    val deidentifhir = new Deidentifhir(Seq())
     val rOut: Resource = deidentifhir.deidentify(ms.asInstanceOf[Resource])
   }
 
@@ -210,9 +211,10 @@ class DeidentiFHIRUnitTests extends AnyFunSuite {
 
     val module = Module(
       pattern = ResourceExistsPath("Patient"),
-      pathHandlers = Map("Patient.active" -> Some(Seq(firstPathHandler, secondPathHandler))).asInstanceOf[MapOfPathHandlers])
+      pathHandlers = Map("Patient.active" -> Some(Seq(firstPathHandler, secondPathHandler))).asInstanceOf[MapOfPathHandlers],
+      typeHandlers = Map(classOf[BooleanType] -> Some(Seq(typeHandler))).asInstanceOf[MapOfTypeHandlers])
 
-    val deidentiFHIR = new Deidentifhir(Seq(module), Map(classOf[BooleanType] -> Some(Seq(typeHandler))).asInstanceOf[MapOfTypeHandlers])
+    val deidentiFHIR = new Deidentifhir(Seq(module))
 
     val patient = new Patient()
     patient.setActive(true)
@@ -232,8 +234,9 @@ class DeidentiFHIRUnitTests extends AnyFunSuite {
 
     val module = Module(
       pattern = ResourceExistsPath("DiagnosticReport"),
-      pathHandlers = Map("DiagnosticReport.id" -> Some(Seq(idTypeHandler))).asInstanceOf[MapOfPathHandlers])
-    val deidentiFHIR = new Deidentifhir(Seq(module), Map())
+      pathHandlers = Map("DiagnosticReport.id" -> Some(Seq(idTypeHandler))).asInstanceOf[MapOfPathHandlers],
+      typeHandlers = Map())
+    val deidentiFHIR = new Deidentifhir(Seq(module))
 
     val deidentifiedReport = deidentiFHIR.deidentify(diagnosticReport)
     assert(deidentifiedReport.getMeta.getVersionId == null)
@@ -249,8 +252,8 @@ class DeidentiFHIRUnitTests extends AnyFunSuite {
     val encounter = new Encounter()
     encounter.addExtension(outer)
 
-    val module = Module(pattern = ResourceExistsPath("Encounter"), Map())
-    val deidentiFHIR = new Deidentifhir(Seq(module), Map())
+    val module = Module(pattern = ResourceExistsPath("Encounter"), Map(), Map())
+    val deidentiFHIR = new Deidentifhir(Seq(module))
 
     val deidentifiedRes = deidentiFHIR.deidentify(encounter)
   }

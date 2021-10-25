@@ -78,7 +78,7 @@ object ModuleConfigTester {
     registry.addHander("generalizePostalCode", Handlers.generalizePostalCode)
 
     val module = ModuleBuilder(config, registry).build()
-    val deidentifhir = new Deidentifhir(Seq(module), Map())
+    val deidentifhir = new Deidentifhir(Seq(module))
 
     val examplesFiles = arguments.exampleDirectory.toFile
       .listFiles

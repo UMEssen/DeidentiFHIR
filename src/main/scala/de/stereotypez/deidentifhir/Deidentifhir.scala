@@ -4,7 +4,7 @@ import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
 import de.stereotypez.deidentifhir.Deidentifhir.DeidentifhirHandler
 import de.stereotypez.deidentifhir.util.AlwaysReturnValueMap
-import de.stereotypez.deidentifhir.util.DeidentifhirUtils.{mergePathHandlers, resourceMatchesFhirPath}
+import de.stereotypez.deidentifhir.util.DeidentifhirUtils.{mergeHandlers, resourceMatchesFhirPath}
 import de.stereotypez.deidentifhir.util.Hapi._
 import org.hl7.fhir.instance.model.api.{IBaseDatatype, IBaseExtension, IBaseHasExtensions}
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent
@@ -17,7 +17,9 @@ case class ProfileFhirPath(resourceType: String, canonicalProfile: String) exten
 case class ResourceExistsPath(resourceType: String) extends FhirPath
 case class ApplyAlways() extends FhirPath
 
-case class Module(pattern: FhirPath, pathHandlers: Map[String, Option[Seq[DeidentifhirHandler[Any]]]]) // TODO add typehandlers
+case class Module(pattern: FhirPath,
+                  pathHandlers: Map[String, Option[Seq[DeidentifhirHandler[Any]]]],
+                  typeHandlers: Map[Class[_], Option[Seq[DeidentifhirHandler[Any]]]])
 
 object Deidentifhir {
   // each handler gets passed:
@@ -26,13 +28,14 @@ object Deidentifhir {
   // 3. a sequence of all elements from the root to the current element
   type DeidentifhirHandler[T <: Any] = (Seq[String], T, Seq[Base]) => T
 
+  // TODO deduplicate code with the other apply method
   def apply(config: Config): Deidentifhir = {
     // TODO check config version
     val moduleConfigs = config.getObject("modules")
     val moduleKeys = moduleConfigs.keySet()
     val modules = moduleKeys.asScala.toSeq.map(key => { ModuleBuilder(moduleConfigs.toConfig.getConfig(key)).build()})
 
-    new Deidentifhir(modules, Map())
+    new Deidentifhir(modules)
   }
 
   def apply(config: Config, registry: Registry): Deidentifhir = {
@@ -41,18 +44,18 @@ object Deidentifhir {
     val moduleKeys = moduleConfigs.keySet()
     val modules = moduleKeys.asScala.toSeq.map(key => { ModuleBuilder(moduleConfigs.toConfig.getConfig(key), registry).build()})
 
-    new Deidentifhir(modules, Map())
+    new Deidentifhir(modules)
   }
 
   def buildKeepAll() = {
     val keepMap = new AlwaysReturnValueMap()
-    val keepModule = Module(pattern = ApplyAlways(), keepMap)
-    (new Deidentifhir(Seq(keepModule), Map()), keepMap)
+    val keepModule = Module(pattern = ApplyAlways(), keepMap, Map())
+    (new Deidentifhir(Seq(keepModule)), keepMap)
   }
 }
 
 // TODO remove typehandlers
-class Deidentifhir(modules: Seq[Module], typeHandlers: Map[Class[_], Option[Seq[DeidentifhirHandler[Any]]]]) extends LazyLogging {
+class Deidentifhir(modules: Seq[Module]) extends LazyLogging {
 
   def deidentify(resource: Resource): Resource = {
     resource match {
@@ -77,10 +80,12 @@ class Deidentifhir(modules: Seq[Module], typeHandlers: Map[Class[_], Option[Seq[
     val resource = context.head.asInstanceOf[Resource]
     val applicableModules = modules.filter(module => {resourceMatchesFhirPath(resource, module.pattern)})
     // get all handlers for the current path from all applicable modules
-    val mergedPathHandlers = mergePathHandlers(applicableModules.map(_.pathHandlers).map(_.get(path.mkString("."))))
+    val mergedPathHandlers = mergeHandlers(applicableModules.map(_.pathHandlers).map(_.get(path.mkString("."))))
+    // get all handlers for the current type from all applicable modules
+    val mergedTypeHandlers= mergeHandlers(applicableModules.map(_.typeHandlers).map(_.get(value.getClass)))
 
     // type handlers have precedence
-    typeHandlers.get(value.getClass)
+    mergedTypeHandlers
       .map(_.map(_.foldLeft(value)((accumulator, handler) => handler(path, accumulator, context))).getOrElse(value))
       .orElse(Option(value))
       // now apply path handlers
