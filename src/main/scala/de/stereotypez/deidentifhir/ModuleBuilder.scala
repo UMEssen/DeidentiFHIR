@@ -5,6 +5,7 @@ import de.stereotypez.deidentifhir.Deidentifhir.DeidentifhirHandler
 import de.stereotypez.deidentifhir.ModuleBuilder.determineBaseProfilePaths
 import de.stereotypez.deidentifhir.util.DeidentifhirUtils.determinePattern
 import de.stereotypez.deidentifhir.util.Handlers
+import org.hl7.fhir.r4.model.{DateTimeType, DateType, InstantType}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -44,16 +45,31 @@ class ModuleBuilder(pattern: FhirPath, fullProfilePaths: Seq[String]) {
       registerPlainPath(path.unwrapped().toString, Handlers.keepHandler)
     })
 
-    conf.getConfig("paths").root().entrySet().forEach( entry => {
-      val path = entry.getKey
-      val configObject = entry.getValue.asInstanceOf[ConfigObject]
+    def registerHandlersInConfigSection(section: String, handlerRegistrationLogic: (String, DeidentifhirHandler[_]) => Unit): Unit = {
 
-      val handlerName = configObject.toConfig.getString("handler")
-      val maybeHandler = registry.getHandler(handlerName)
-      maybeHandler match {
-        case Some(handler) => register(path, Some(handler))
-        case None          => throw new IllegalStateException(s"Cannot resolve requested handler '$handlerName'!")
+      // check if this module section is present at all
+      if(!conf.hasPath(section)) {
+        return
       }
+
+      conf.getConfig(section).root().entrySet().forEach( entry => {
+        val path = entry.getKey
+        val configObject = entry.getValue.asInstanceOf[ConfigObject]
+        val handlerName = configObject.toConfig.getString("handler")
+        val maybeHandler = registry.getHandler(handlerName)
+        maybeHandler match {
+          case Some(handler) => handlerRegistrationLogic(path, handler)
+          case None          => throw new IllegalStateException(s"Cannot resolve requested handler '$handlerName'!")
+        }
+      })
+    }
+
+    registerHandlersInConfigSection("paths", (path: String, handler: DeidentifhirHandler[_]) => {
+      register(path, Some(handler))
+    })
+
+    registerHandlersInConfigSection("types", (typeString: String, handler: DeidentifhirHandler[_]) => {
+      register(handler)(ClassTag(Class.forName(s"org.hl7.fhir.r4.model.$typeString")))
     })
   }
 
@@ -136,6 +152,6 @@ class ModuleBuilder(pattern: FhirPath, fullProfilePaths: Seq[String]) {
   }
 
   def build(): Module = {
-    Module(pattern, pathHandlers.toMap, Map()) // TODO add typeHandlers
+    Module(pattern, pathHandlers.toMap, typeHandlers.toMap)
   }
 }

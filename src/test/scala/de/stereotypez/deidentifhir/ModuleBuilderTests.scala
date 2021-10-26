@@ -3,15 +3,42 @@ package de.stereotypez.deidentifhir
 import com.typesafe.config.ConfigFactory
 import de.stereotypez.deidentifhir.Deidentifhir.DeidentifhirHandler
 import de.stereotypez.deidentifhir.util.Handlers.generalizePostalCodeHandler
-import org.hl7.fhir.r4.model.Base
+import org.hl7.fhir.r4.model.{Base, DateType}
 import org.scalatest.funsuite.AnyFunSuite
-
-import java.io.File
 
 class ModuleBuilderTests extends AnyFunSuite {
 
-  // TODO check if a path is valid
-  // TODO add a test with a config without any paths upfront
+  test("register invalid type") {
+    val config = ConfigFactory.parseString(
+      """
+        |  pattern = "Observation.meta.profile contains 'https://www.medizininformatik-initiative.de/fhir/core/modul-labor/StructureDefinition/ObservationLab'"
+        |  base = [
+        |    # Register a path for unmodified keeping"
+        |    "Observation.id"
+        |  ]
+        |  types = {
+        |   "DoesNotExistType" : { handler = dummy }
+        |  }
+    """.stripMargin)
+
+    val registry = new Registry()
+    registry.addHander("dummy", (path: Seq[String], date: DateType, context: Seq[Base]) => date)
+
+    assertThrows[ClassNotFoundException] {
+      val module = ModuleBuilder(config, registry).build()
+    }
+  }
+
+  test("paths and types are optional") {
+    val config = ConfigFactory.parseString(
+      """
+        |  pattern = "Observation.meta.profile contains 'https://www.medizininformatik-initiative.de/fhir/core/modul-labor/StructureDefinition/ObservationLab'"
+        |  base = [
+        |  ]
+    """.stripMargin)
+
+    val module = ModuleBuilder(config).build()
+  }
 
   test("module config") {
     val config = ConfigFactory.parseString(
@@ -23,14 +50,21 @@ class ModuleBuilderTests extends AnyFunSuite {
         |  ]
         |  paths = {
         |    # Register a handler without any parameters
-        |    "*.id" : { handler = replaceWithPseudonym }
+        |    "*.id" : { handler = dummy }
+        |  }
+        |  types = {
+        |   "DateType" : { handler = dummy }
         |  }
     """.stripMargin)
 
-    val module = ModuleBuilder(config).build()
+    val registry = new Registry()
+    registry.addHander("dummy", (path: Seq[String], date: DateType, context: Seq[Base]) => date)
+
+    val module = ModuleBuilder(config, registry).build()
 
     assert(module.pattern.equals(ProfileFhirPath("Observation", "https://www.medizininformatik-initiative.de/fhir/core/modul-labor/StructureDefinition/ObservationLab")))
     assert(module.pathHandlers.keySet.size==1)
+    assert(module.typeHandlers.keySet.size==1)
   }
 
   test("programmatically register multiple handlers for the same path") {
