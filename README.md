@@ -92,7 +92,5 @@ type DeidentifhirHandler[T <: Any] = (Seq[String], T, Seq[Base]) => T
 
 Each handler gets passed
 1. the path to the current element,
-2. the current element that should be processed
+2. a copy (to avoid accidental mutation of the input) of the current element that should be processed 
 3. and a sequence of all elements from the root to the current element.
-
-In order to comply with the general idea to not mutate the given input resources, custom handlers are not allowed to modify the passed elements.

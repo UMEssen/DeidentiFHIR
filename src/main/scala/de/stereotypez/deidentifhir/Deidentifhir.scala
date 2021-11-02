@@ -72,7 +72,6 @@ class Deidentifhir(modules: Seq[Module]) extends LazyLogging {
     }
   }
 
-  // FIXME if a None-handler is registered for a path or type the value will not be copied but just passed back again!
   // TODO applyHandlers is only called on primitive types! -> change from Any to PrimitiveType[_]
   private def applyHandlers(path: Seq[String], value: Any, context: Seq[Base]): Any = {
 
@@ -127,7 +126,7 @@ class Deidentifhir(modules: Seq[Module]) extends LazyLogging {
   private def deidentifyInner(path: Seq[String], value: Any, context: Seq[Base]): Any = {
     value match {
       case v: PrimitiveType[_] =>
-        val deidentifiedValue = applyHandlers(path, v, context).asInstanceOf[PrimitiveType[_]]
+        val deidentifiedValue = applyHandlers(path, v.copy(), context).asInstanceOf[PrimitiveType[_]]
         // the extensions that are associated with a primitive type need to be handled separately
         val deidentifiedExtensions = v.getExtension.asScala.map(deidentifyWrapper(path :+ "extension", _, context).asInstanceOf[Extension]).asJava
 
@@ -159,6 +158,7 @@ class Deidentifhir(modules: Seq[Module]) extends LazyLogging {
             .filterNot(_ == null)
             .toList.asJava
         }
+      case _ => throw new Exception("Unexpected input!")
     }
   }
 

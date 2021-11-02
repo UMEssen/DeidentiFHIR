@@ -269,6 +269,9 @@ class DeidentiFHIRUnitTests extends AnyFunSuite {
     patient.setActive(true)
     val pPatient : Patient = deidentifhir.deidentify(patient).asInstanceOf[Patient]
     assert(pPatient.hasActive)
+
+    // check that we do not return the same instance
+    assert(patient.getActiveElement ne pPatient.getActiveElement)
   }
 
   test("handler application order") {
