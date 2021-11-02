@@ -3,6 +3,7 @@ package de.stereotypez.deidentifhir
 import ca.uhn.fhir.context.FhirContext
 import com.typesafe.config.ConfigFactory
 import de.stereotypez.deidentifhir.Deidentifhir.DeidentifhirHandler
+import org.hl7.fhir.instance.model.api.IPrimitiveType
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent
 import org.hl7.fhir.r4.model.Dosage.DosageDoseAndRateComponent
 import org.hl7.fhir.r4.model.Narrative.NarrativeStatus
@@ -76,6 +77,75 @@ class DeidentiFHIRUnitTests extends AnyFunSuite {
     assert(extensions.size()==1)
     assert(extensions.get(0).getValue == value)
     assert(extensions.get(0).getUrl.equals("dummy"))
+
+    assert(pPatient.hasAddress()==false)
+  }
+
+  test("extensions on primitive types are handled correctly") {
+
+    val ext = new Extension()
+    ext.setUrl("http://hl7.org/fhir/StructureDefinition/patient-birthTime")
+    val value = new DateTimeType("1974-12-25T14:35:45-05:00")
+    ext.setValue(value)
+
+    val patient = new Patient()
+    patient.getBirthDateElement.addExtension(ext)
+
+    println(FhirContext.forR4().newJsonParser().setPrettyPrint(true).encodeResourceToString(patient))
+
+    val config = ConfigFactory.parseString(
+      """
+      |    pattern = "Patient.exists()"
+      |    base = [
+      |      "Patient.birthDate.extension.url"
+      |    ]
+      |    paths = {
+      |    }
+      """.stripMargin)
+    val module = ModuleBuilder(config).build()
+    val deidentifhir = new Deidentifhir(Seq(module))
+
+    val pPatient : Patient = deidentifhir.deidentify(patient).asInstanceOf[Patient]
+
+    println(FhirContext.forR4().newJsonParser().setPrettyPrint(true).encodeResourceToString(pPatient))
+
+    assert(pPatient.getBirthDateElement.hasExtension)
+    assert(pPatient.getBirthDateElement.getExtensionFirstRep.hasUrl)
+    assert(!pPatient.getBirthDateElement.getExtensionFirstRep.hasValue)
+  }
+
+  test("extensions on non-primitive types are handled correctly") {
+
+    val ext = new Extension()
+    ext.setUrl("dummy")
+    val value = new Coding().setSystem("dummy").setCode("dummy")
+    ext.setValue(value)
+
+    val address = new Address
+    address.setUse(Address.AddressUse.HOME)
+    address.addExtension(ext)
+    assert(!address.isInstanceOf[IPrimitiveType[_]])
+
+    val patient = new Patient()
+    patient.addAddress(address)
+
+    val config = ConfigFactory.parseString(
+      """
+        |    pattern = "Patient.exists()"
+        |    base = [
+        |      "Patient.address.extension.url"
+        |    ]
+        |    paths = {
+        |    }
+      """.stripMargin)
+    val module = ModuleBuilder(config).build()
+    val deidentifhir = new Deidentifhir(Seq(module))
+
+    val pPatient : Patient = deidentifhir.deidentify(patient).asInstanceOf[Patient]
+
+    assert(pPatient.getAddressFirstRep.hasExtension)
+    assert(pPatient.getAddressFirstRep.getExtensionFirstRep.hasUrl)
+    assert(!pPatient.getAddressFirstRep.getExtensionFirstRep.hasValue)
   }
 
   test("maintain lists of items") {

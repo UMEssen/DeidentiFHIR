@@ -6,9 +6,8 @@ import de.stereotypez.deidentifhir.Deidentifhir.DeidentifhirHandler
 import de.stereotypez.deidentifhir.util.AlwaysReturnValueMap
 import de.stereotypez.deidentifhir.util.DeidentifhirUtils.{mergeHandlers, resourceMatchesFhirPath}
 import de.stereotypez.deidentifhir.util.Hapi._
-import org.hl7.fhir.instance.model.api.{IBaseDatatype, IBaseExtension, IBaseHasExtensions}
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent
-import org.hl7.fhir.r4.model.{Base, Bundle, Resource}
+import org.hl7.fhir.r4.model._
 
 import scala.jdk.CollectionConverters._
 
@@ -54,7 +53,6 @@ object Deidentifhir {
   }
 }
 
-// TODO remove typehandlers
 class Deidentifhir(modules: Seq[Module]) extends LazyLogging {
 
   def deidentify(resource: Resource): Resource = {
@@ -74,7 +72,11 @@ class Deidentifhir(modules: Seq[Module]) extends LazyLogging {
     }
   }
 
+  // FIXME if a None-handler is registered for a path or type the value will not be copied but just passed back again!
+  // TODO applyHandlers is only called on primitive types! -> change from Any to PrimitiveType[_]
   private def applyHandlers(path: Seq[String], value: Any, context: Seq[Base]): Any = {
+
+    assert(value.isInstanceOf[PrimitiveType[_]])
 
     // only use modules whose pattern matches the current resource
     val resource = context.head.asInstanceOf[Resource]
@@ -122,49 +124,42 @@ class Deidentifhir(modules: Seq[Module]) extends LazyLogging {
       null
   }
 
-  // TODO do not modify the given extension!
-  private def deidentifyExtension(ext: IBaseExtension[_,_], path: Seq[String], context: Seq[Base]): IBaseExtension[_, _] = {
+  private def deidentifyInner(path: Seq[String], value: Any, context: Seq[Base]): Any = {
+    value match {
+      case v: PrimitiveType[_] =>
+        val deidentifiedValue = applyHandlers(path, v, context).asInstanceOf[PrimitiveType[_]]
+        // the extensions that are associated with a primitive type need to be handled separately
+        val deidentifiedExtensions = v.getExtension.asScala.map(deidentifyWrapper(path :+ "extension", _, context).asInstanceOf[Extension]).asJava
 
-    // val emptyBase = ext.getClass.getConstructor().newInstance() // TODO remove this line again or merge with deidentify wrapper
+        if(deidentifiedValue==null) {
+          if(deidentifiedExtensions.isEmpty) {
+            // the primitive type was removed and the extensions as well
+            null
+          } else {
+            // the primitive type was removed but the extensions should be kept
+            val emptyValue = v.getClass.getConstructor().newInstance()
+            emptyValue.setExtension(deidentifiedExtensions)
+            emptyValue
+          }
+        } else {
+          deidentifiedValue.setExtension(deidentifiedExtensions)
+          deidentifiedValue
+        }
 
-    // TODO the url might be null as well!
-    ext.setUrl(applyHandlers(path :+ "url", ext.getUrl, context).asInstanceOf[String])
-    if(ext.getValue != null) {
-      ext.setValue(applyHandlers(path :+ "value", ext.getValue, context).asInstanceOf[IBaseDatatype])
+      case v: Base =>
+        // recurse
+        deidentifyWrapper(path, v, context)
+      case v: java.util.List[_] =>
+        if(v.isEmpty) {
+          // remove empty lists altogether. which might be the case if the resource was parsed with HAPI FHIR
+          null
+        } else {
+          v.asScala
+            .map(deidentifyInner(path, _, context))
+            .filterNot(_ == null)
+            .toList.asJava
+        }
     }
-    ext.getExtension.asScala.foreach {
-      case e: IBaseExtension[_, _] => deidentifyExtension(e, path :+ "extension", context)
-      case e => throw new RuntimeException(s"Unexpected extension type ${e}")
-    }
-    ext
-  }
-
-  private def deidentifyInner(path: Seq[String], value: Any, context: Seq[Base]): Any = value match {
-    case v: Base if v.isPrimitive =>
-
-      if (v.isInstanceOf[IBaseHasExtensions]) {
-        v.asInstanceOf[IBaseHasExtensions].getExtension.asScala.foreach(deidentifyExtension(_, path :+ "extension", context))
-      }
-
-      applyHandlers(path, v, context)
-    case v: Base =>
-
-      if (v.isInstanceOf[IBaseHasExtensions]) {
-        v.asInstanceOf[IBaseHasExtensions].getExtension.asScala.foreach(deidentifyExtension(_, path :+ "extension", context))
-      }
-
-      // recurse
-      deidentifyWrapper(path, v, context)
-    case v: java.util.List[_] =>
-      if(v.isEmpty) {
-        // remove empty lists altogether. which might be the case if the resource was parsed with HAPI FHIR
-        null
-      } else {
-        v.asScala
-          .map(deidentifyInner(path, _, context))
-          .filterNot(_ == null)
-          .toList.asJava
-      }
   }
 
 }
