@@ -93,12 +93,10 @@ class DeidentiFHIRUnitTests extends AnyFunSuite {
 
     println(FhirContext.forR4().newJsonParser().setPrettyPrint(true).encodeResourceToString(patient))
 
-    // TODO remove "Patient.birthDate"
     val config = ConfigFactory.parseString(
       """
       |    pattern = "Patient.exists()"
       |    base = [
-      |      "Patient.birthDate"
       |      "Patient.birthDate.extension.url"
       |    ]
       |    paths = {

@@ -127,13 +127,25 @@ class Deidentifhir(modules: Seq[Module]) extends LazyLogging {
   private def deidentifyInner(path: Seq[String], value: Any, context: Seq[Base]): Any = {
     value match {
       case v: PrimitiveType[_] =>
-        val deidentifiedValue = applyHandlers(path, v, context)
-        if(deidentifiedValue!=null) {
-          // the extensions that are associated with a primitive type need to be handled separately
-          val deidentifiedExtensions = v.getExtension.asScala.map(deidentifyWrapper(path :+ "extension", _, context).asInstanceOf[Extension]).asJava
-          deidentifiedValue.asInstanceOf[PrimitiveType[_]].setExtension(deidentifiedExtensions)
+        val deidentifiedValue = applyHandlers(path, v, context).asInstanceOf[PrimitiveType[_]]
+        // the extensions that are associated with a primitive type need to be handled separately
+        val deidentifiedExtensions = v.getExtension.asScala.map(deidentifyWrapper(path :+ "extension", _, context).asInstanceOf[Extension]).asJava
+
+        if(deidentifiedValue==null) {
+          if(deidentifiedExtensions.isEmpty) {
+            // the primitive type was removed and the extensions as well
+            null
+          } else {
+            // the primitive type was removed but the extensions should be kept
+            val emptyValue = v.getClass.getConstructor().newInstance()
+            emptyValue.setExtension(deidentifiedExtensions)
+            emptyValue
+          }
+        } else {
+          deidentifiedValue.setExtension(deidentifiedExtensions)
+          deidentifiedValue
         }
-        deidentifiedValue
+
       case v: Base =>
         // recurse
         deidentifyWrapper(path, v, context)
