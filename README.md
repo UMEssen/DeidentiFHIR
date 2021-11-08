@@ -86,7 +86,7 @@ Patterns are based on [FHIRPath](https://hl7.org/fhirpath/). However, currently 
 
 Implementation of custom handlers is quite easy. You just need to define a function with the following signature:
 
-```
+```scala
 type DeidentifhirHandler[T <: Any] = (Seq[String], T, Seq[Base]) => T
 ```
 
