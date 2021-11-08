@@ -4,7 +4,7 @@ DeidentiFHIR iterates recursively over the given resources and checks for each e
 
 ## Usage
 
-```
+```scala
 // 1. Load a custom DeidentiFHIR configuration.
 val config = ConfigFactory.parseFile(new File("/path/to/DeidentiFHIR.conf"))
 
