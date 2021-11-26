@@ -457,4 +457,16 @@ class DeidentiFHIRUnitTests extends AnyFunSuite {
     val deidentified_obs4 = deidentiFHIR.deidentify(obs4).asInstanceOf[Observation]
     assert(deidentified_obs4==null)
   }
+
+  test("remove empty resources from bundle") {
+    val inputBundle = new Bundle()
+    inputBundle.addEntry(new BundleEntryComponent().setResource(new Patient().setActive(true)))
+    inputBundle.addEntry(new BundleEntryComponent().setResource(new Patient().setId("123")))
+    inputBundle.addEntry(new BundleEntryComponent().setResource(new Patient()))
+
+    val deidentiFHIR = new Deidentifhir(Seq())
+
+    val outputBundle = deidentiFHIR.deidentify(inputBundle).asInstanceOf[Bundle]
+    assert(outputBundle.getEntry.size()==0)
+  }
 }

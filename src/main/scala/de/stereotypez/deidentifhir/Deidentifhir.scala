@@ -62,7 +62,8 @@ class Deidentifhir(modules: Seq[Module]) extends LazyLogging {
         val deidentifiedBundle = new Bundle()
         b.getEntry.asScala
           .map(_.getResource)
-          .map(deidentify) // TODO filter for null?
+          .map(deidentify)
+          .filter(_!=null) // remove entries if the resource was removed altogether
           .map(deidentifiedResource => {
             new BundleEntryComponent().setResource(deidentifiedResource)
           })
