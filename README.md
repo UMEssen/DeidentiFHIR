@@ -45,7 +45,8 @@ A module configuration must contain three elements:
 
 * The pattern is used to decide if the rules defined in this module should be applied to a given resource or not.
 * A list of base paths. All elements defined here are keep unmodified. All elements that are not listed will be removed during the de-identification process. 
-* A list of handler registrations for elements that should be handled in a specific way. Only registration on paths that are included in the base paths are allowed.
+* A list of paths with corresponding handler registrations, that implement specific logic that should be applied to the corresponding elements. Only registration on paths that are included in the base paths are allowed.
+* A list of types with corresponding handler registrations, that implement specific logic that should be applied to the corresponding elements. DeidentiFHIR is _not_ aware of any type hierarchies!
 
 Example:
 
@@ -60,6 +61,9 @@ base = [
 ]
 paths = {
     "Observation.id" : { handler = idReplacementHandler }
+}
+types = {
+    "DateType" : { handler = dateShiftHandler }
 }
 ```
 
