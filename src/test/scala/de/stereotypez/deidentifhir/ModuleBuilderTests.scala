@@ -93,7 +93,7 @@ class ModuleBuilderTests extends AnyFunSuite {
 
   val dummyHandler: Option[DeidentifhirHandler[Base]] = Some((path: Seq[String], base: Base, context: Seq[Base]) => base)
 
-  test("load profile with non existing FHIR paths") {
+  ignore("load profile with non existing FHIR paths") {
     val config = ConfigFactory.parseString(
       """
         |  pattern = "Patient.exists()"

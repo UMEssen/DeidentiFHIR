@@ -376,7 +376,7 @@ class DeidentiFHIRUnitTests extends AnyFunSuite {
   val fctx = FhirContext.forR4()
   val parser = fctx.newJsonParser().setPrettyPrint(true)
 
-  test("patient with text with status and div") {
+  ignore("patient with text with status and div") {
 
     val narrative = new Narrative().setStatus(NarrativeStatus.GENERATED)
     narrative.setDivAsString("test")
