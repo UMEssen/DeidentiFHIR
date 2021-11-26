@@ -70,6 +70,7 @@ Patterns are based on [FHIRPath](https://hl7.org/fhirpath/). However, currently 
 | Purpose                        | Used regular expression             | Example                                                                                                                                  |
 |--------------------------------|-------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
 | match a specific profile       | `(.*).meta.profile contains '(.*)'` | Observation.meta.profile contains 'https://www.medizininformatik-initiative.de/fhir/core/modul-labor/StructureDefinition/ObservationLab' |
+| match a identifier system      | `(.*).identifier.system contains '(.*)'` | Patient.identifier.system contains 'https://www.example.org/fhir/sid/patienten' |
 | match a specific resource type | `(.*).exists\\(\\)`                 | Observation.exists()                                                                                                                     |
 | ...                            |                                     |                                                                                                                                          |
 

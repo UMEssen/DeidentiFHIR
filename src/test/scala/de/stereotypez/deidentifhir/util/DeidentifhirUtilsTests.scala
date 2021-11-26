@@ -1,8 +1,9 @@
 package de.stereotypez.deidentifhir.util
 
 import de.stereotypez.deidentifhir.Deidentifhir.DeidentifhirHandler
-import de.stereotypez.deidentifhir.util.DeidentifhirUtils.mergeHandlers
-import org.hl7.fhir.r4.model.Base
+import de.stereotypez.deidentifhir.IdentifierSystemFhirPath
+import de.stereotypez.deidentifhir.util.DeidentifhirUtils.{mergeHandlers, resourceMatchesFhirPath}
+import org.hl7.fhir.r4.model.{Base, Identifier, Patient}
 import org.scalatest.funsuite.AnyFunSuite
 
 class DeidentifhirUtilsTests extends AnyFunSuite {
@@ -29,5 +30,19 @@ class DeidentifhirUtilsTests extends AnyFunSuite {
     assert(test3.equals(Some(Some(Seq(h1,h2,h3,h4)))))
     val test4 = mergeHandlers(Seq(handlersFromModule1, handlersFromModule3, handlersFromModule4, handlersFromModule2))
     assert(test4.equals(Some(Some(Seq(h1,h2,h3,h4)))))
+  }
+
+  test("resourceMatchesFhirPath") {
+
+    val p = new Patient().addIdentifier(new Identifier().setSystem("testSystem"))
+    assert(resourceMatchesFhirPath(p, IdentifierSystemFhirPath("Patient", "testSystem")))
+
+    assert(!resourceMatchesFhirPath(new Patient(), IdentifierSystemFhirPath("Patient", "testSystem")))
+
+    val q = new Patient().addIdentifier(new Identifier().setSystem("testSystem2"))
+    assert(!resourceMatchesFhirPath(q, IdentifierSystemFhirPath("Patient", "testSystem")))
+
+    val r = new Patient().addIdentifier(new Identifier().setSystem("testSystem2")).addIdentifier(new Identifier().setSystem("testSystem"))
+    assert(resourceMatchesFhirPath(r, IdentifierSystemFhirPath("Patient", "testSystem")))
   }
 }

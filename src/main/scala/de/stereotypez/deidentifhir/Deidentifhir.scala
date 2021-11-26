@@ -13,6 +13,7 @@ import scala.jdk.CollectionConverters._
 
 sealed abstract class FhirPath
 case class ProfileFhirPath(resourceType: String, canonicalProfile: String) extends FhirPath
+case class IdentifierSystemFhirPath(resourceType: String, identifierSystem: String) extends FhirPath
 case class ResourceExistsPath(resourceType: String) extends FhirPath
 case class ApplyAlways() extends FhirPath
 
