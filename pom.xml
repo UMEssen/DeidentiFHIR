@@ -1,8 +1,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>de.stereotypez</groupId>
-  <artifactId>deidentiFHIR</artifactId>
-  <version>0.2.1</version>
+  <artifactId>deidentifhir</artifactId>
+  <version>0.2.2</version>
   <name>${project.artifactId}</name>
   <description>Generic FHIR de-identification library based on HAPI FHIR</description>
   <inceptionYear>2020</inceptionYear>
