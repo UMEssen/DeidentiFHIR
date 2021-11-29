@@ -183,13 +183,10 @@
   <distributionManagement>
     <!-- GitHub Packages  -->
     <repository>
-      <id>git.smith.care</id>
-      <url>https://git.smith.care/api/v4/projects/135/packages/maven</url>
+      <id>github</id>
+      <name>GitHub UMEssen Apache Maven Packages</name>
+      <url>https://maven.pkg.github.com/UMEssen/DeidentiFHIR</url>
     </repository>
-    <snapshotRepository>
-      <id>git.smith.care</id>
-      <url>https://git.smith.care/api/v4/projects/135/packages/maven</url>
-    </snapshotRepository>
   </distributionManagement>
 
   <dependencies>
