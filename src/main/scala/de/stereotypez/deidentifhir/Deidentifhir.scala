@@ -151,15 +151,18 @@ class Deidentifhir(modules: Seq[Module]) extends LazyLogging {
         // recurse
         deidentifyWrapper(path, v, context)
       case v: java.util.List[_] =>
-        if(v.isEmpty) {
-          // remove empty lists altogether. which might be the case if the resource was parsed with HAPI FHIR
-          null
-        } else {
-          v.asScala
+          val list = v.asScala
             .map(deidentifyInner(path, _, context))
             .filterNot(_ == null)
             .toList.asJava
-        }
+          if(list.isEmpty) {
+            // This can either be the case if
+            // 1. the list was already empty, which can happen if the resource was parsed with HAPI FHIR,
+            // 2. or if all elements were removed by deidentifyInner
+            null
+          } else {
+            list
+          }
       case _ => throw new Exception("Unexpected input!")
     }
   }
