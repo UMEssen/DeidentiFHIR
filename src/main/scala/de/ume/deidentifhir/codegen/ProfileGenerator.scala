@@ -1,8 +1,8 @@
-package de.stereotypez.deidentifhir.codegen
+package de.ume.deidentifhir.codegen
 
 import com.typesafe.scalalogging.LazyLogging
-import de.stereotypez.deidentifhir.util.Hapi
-import de.stereotypez.deidentifhir.util.Hapi._
+import de.ume.deidentifhir.util.Hapi
+import de.ume.deidentifhir.util.Hapi._
 import org.hl7.fhir.r4.model.{Base, BaseResource, Enumeration, MoneyQuantity, Property, SimpleQuantity, Type}
 import org.reflections.Reflections
 

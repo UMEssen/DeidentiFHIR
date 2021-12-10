@@ -1,6 +1,6 @@
-package de.stereotypez.deidentifhir.util
+package de.ume.deidentifhir.util
 
-import de.stereotypez.deidentifhir.Deidentifhir.DeidentifhirHandler
+import de.ume.deidentifhir.Deidentifhir.DeidentifhirHandler
 import org.hl7.fhir.r4.model.Base
 
 import scala.collection.{immutable, mutable}

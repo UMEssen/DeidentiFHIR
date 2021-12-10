@@ -1,4 +1,4 @@
-package de.stereotypez.deidentifhir.util
+package de.ume.deidentifhir.util
 
 import org.hl7.fhir.r4.model.{Base, Property, Type}
 

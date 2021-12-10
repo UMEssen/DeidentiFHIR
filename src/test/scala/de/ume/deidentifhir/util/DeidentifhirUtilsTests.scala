@@ -1,8 +1,8 @@
-package de.stereotypez.deidentifhir.util
+package de.ume.deidentifhir.util
 
-import de.stereotypez.deidentifhir.Deidentifhir.DeidentifhirHandler
-import de.stereotypez.deidentifhir.IdentifierSystemFhirPath
-import de.stereotypez.deidentifhir.util.DeidentifhirUtils.{mergeHandlers, resourceMatchesFhirPath}
+import de.ume.deidentifhir.Deidentifhir.DeidentifhirHandler
+import de.ume.deidentifhir.IdentifierSystemFhirPath
+import de.ume.deidentifhir.util.DeidentifhirUtils.{mergeHandlers, resourceMatchesFhirPath}
 import org.hl7.fhir.r4.model.{Base, Identifier, Patient}
 import org.scalatest.funsuite.AnyFunSuite
 

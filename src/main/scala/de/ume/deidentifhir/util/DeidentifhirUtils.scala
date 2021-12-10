@@ -1,7 +1,7 @@
-package de.stereotypez.deidentifhir.util
+package de.ume.deidentifhir.util
 
-import de.stereotypez.deidentifhir.Deidentifhir.DeidentifhirHandler
-import de.stereotypez.deidentifhir.{ApplyAlways, FhirPath, IdentifierSystemFhirPath, ProfileFhirPath, ResourceExistsPath}
+import de.ume.deidentifhir.Deidentifhir.DeidentifhirHandler
+import de.ume.deidentifhir.{ApplyAlways, FhirPath, IdentifierSystemFhirPath, ProfileFhirPath, ResourceExistsPath}
 import org.hl7.fhir.instance.model.api.{IBaseHasExtensions, IBaseHasModifierExtensions, IBaseResource}
 import org.hl7.fhir.r4.model.{BaseResource, Identifier, Resource}
 

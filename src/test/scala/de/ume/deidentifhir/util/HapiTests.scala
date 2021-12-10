@@ -1,4 +1,4 @@
-package de.stereotypez.deidentifhir.util
+package de.ume.deidentifhir.util
 
 import org.hl7.fhir.r4.model.Narrative.NarrativeStatus
 import org.hl7.fhir.r4.model.{Annotation, HumanName, ImagingStudy, Narrative, Observation, Period, StringType}

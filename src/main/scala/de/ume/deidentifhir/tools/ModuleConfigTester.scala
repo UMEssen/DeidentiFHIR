@@ -1,9 +1,9 @@
-package de.stereotypez.deidentifhir.tools
+package de.ume.deidentifhir.tools
 
 import ca.uhn.fhir.context.FhirContext
 import com.typesafe.config.ConfigFactory
-import de.stereotypez.deidentifhir.util._
-import de.stereotypez.deidentifhir.{Deidentifhir, FhirPath, ModuleBuilder, Registry}
+import de.ume.deidentifhir.util._
+import de.ume.deidentifhir.{Deidentifhir, FhirPath, ModuleBuilder, Registry}
 import org.hl7.fhir.r4.model.Resource
 import scopt.OParser
 

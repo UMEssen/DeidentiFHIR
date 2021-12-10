@@ -1,11 +1,11 @@
-package de.stereotypez.deidentifhir
+package de.ume.deidentifhir
 
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
-import de.stereotypez.deidentifhir.Deidentifhir.DeidentifhirHandler
-import de.stereotypez.deidentifhir.util.AlwaysReturnValueMap
-import de.stereotypez.deidentifhir.util.DeidentifhirUtils.{mergeHandlers, resourceMatchesFhirPath}
-import de.stereotypez.deidentifhir.util.Hapi._
+import de.ume.deidentifhir.Deidentifhir.DeidentifhirHandler
+import de.ume.deidentifhir.util.AlwaysReturnValueMap
+import de.ume.deidentifhir.util.DeidentifhirUtils.{mergeHandlers, resourceMatchesFhirPath}
+import de.ume.deidentifhir.util.Hapi._
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent
 import org.hl7.fhir.r4.model._
 

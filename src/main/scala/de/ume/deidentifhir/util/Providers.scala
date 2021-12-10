@@ -1,4 +1,4 @@
-package de.stereotypez.deidentifhir.util
+package de.ume.deidentifhir.util
 
 trait IDReplacementProvider {
   def getIDReplacement(resourceType: String, id: String) : String

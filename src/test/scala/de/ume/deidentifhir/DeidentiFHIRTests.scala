@@ -1,4 +1,4 @@
-package de.stereotypez.deidentifhir
+package de.ume.deidentifhir
 
 import ca.uhn.fhir.context.FhirContext
 import com.typesafe.config.ConfigFactory

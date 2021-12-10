@@ -1,10 +1,10 @@
-package de.stereotypez.deidentifhir
+package de.ume.deidentifhir
 
 import com.typesafe.config.{Config, ConfigObject}
-import de.stereotypez.deidentifhir.Deidentifhir.DeidentifhirHandler
-import de.stereotypez.deidentifhir.ModuleBuilder.determineBaseProfilePaths
-import de.stereotypez.deidentifhir.util.DeidentifhirUtils.determinePattern
-import de.stereotypez.deidentifhir.util.Handlers
+import de.ume.deidentifhir.Deidentifhir.DeidentifhirHandler
+import de.ume.deidentifhir.ModuleBuilder.determineBaseProfilePaths
+import de.ume.deidentifhir.util.DeidentifhirUtils.determinePattern
+import de.ume.deidentifhir.util.Handlers
 import org.hl7.fhir.r4.model.{DateTimeType, DateType, InstantType}
 
 import scala.collection.mutable

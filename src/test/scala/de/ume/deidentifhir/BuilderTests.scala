@@ -1,6 +1,6 @@
-package de.stereotypez.deidentifhir
+package de.ume.deidentifhir
 import com.typesafe.config.ConfigFactory
-import de.stereotypez.deidentifhir.util.{Handlers, IDReplacementProvider}
+import de.ume.deidentifhir.util.{Handlers, IDReplacementProvider}
 import org.hl7.fhir.r4.model.Patient
 import org.scalatest.funsuite._
 

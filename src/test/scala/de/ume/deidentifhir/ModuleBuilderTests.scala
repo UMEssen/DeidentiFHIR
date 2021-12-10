@@ -1,8 +1,8 @@
-package de.stereotypez.deidentifhir
+package de.ume.deidentifhir
 
 import com.typesafe.config.ConfigFactory
-import de.stereotypez.deidentifhir.Deidentifhir.DeidentifhirHandler
-import de.stereotypez.deidentifhir.util.Handlers.generalizePostalCodeHandler
+import de.ume.deidentifhir.Deidentifhir.DeidentifhirHandler
+import de.ume.deidentifhir.util.Handlers.generalizePostalCodeHandler
 import org.hl7.fhir.r4.model.{Base, DateType}
 import org.scalatest.funsuite.AnyFunSuite
 

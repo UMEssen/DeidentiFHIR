@@ -1,6 +1,6 @@
-package de.stereotypez.deidentifhir
+package de.ume.deidentifhir
 
-import de.stereotypez.deidentifhir.Deidentifhir.DeidentifhirHandler
+import de.ume.deidentifhir.Deidentifhir.DeidentifhirHandler
 
 import scala.collection.mutable
 

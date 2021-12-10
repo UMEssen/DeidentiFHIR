@@ -1,10 +1,10 @@
-package de.stereotypez.deidentifhir.tools
+package de.ume.deidentifhir.tools
 
 import ca.uhn.fhir.context.FhirContext
 import com.typesafe.config.{ConfigFactory, ConfigList, ConfigRenderOptions, ConfigValueFactory}
-import de.stereotypez.deidentifhir.util.DeidentifhirUtils
-import de.stereotypez.deidentifhir.util.DeidentifhirUtils.determinePattern
-import de.stereotypez.deidentifhir.{Deidentifhir, FhirPath}
+import de.ume.deidentifhir.util.DeidentifhirUtils
+import de.ume.deidentifhir.util.DeidentifhirUtils.determinePattern
+import de.ume.deidentifhir.{Deidentifhir, FhirPath}
 import org.hl7.fhir.r4.model.{Bundle, Resource}
 import scopt.OParser
 

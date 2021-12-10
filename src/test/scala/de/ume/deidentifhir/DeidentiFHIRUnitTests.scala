@@ -1,9 +1,9 @@
-package de.stereotypez.deidentifhir
+package de.ume.deidentifhir
 
 import ca.uhn.fhir.context.FhirContext
 import com.typesafe.config.ConfigFactory
-import de.stereotypez.deidentifhir.Deidentifhir.DeidentifhirHandler
-import de.stereotypez.deidentifhir.util.Handlers
+import de.ume.deidentifhir.Deidentifhir.DeidentifhirHandler
+import de.ume.deidentifhir.util.Handlers
 import org.hl7.fhir.instance.model.api.IPrimitiveType
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent
 import org.hl7.fhir.r4.model.Dosage.DosageDoseAndRateComponent

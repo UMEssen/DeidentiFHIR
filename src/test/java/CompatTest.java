@@ -1,14 +1,3 @@
-import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.parser.IParser;
-import de.stereotypez.deidentifhir.Deidentifhir;
-import de.stereotypez.deidentifhir.util.JavaCompat;
-import org.hl7.fhir.instance.model.api.IBaseResource;
-import org.hl7.fhir.r4.model.IdType;
-import org.hl7.fhir.r4.model.Patient;
-import org.hl7.fhir.r4.model.Resource;
-
-import java.io.InputStream;
-
 //public class CompatTest {
 //
 //    public static void main(String[] args) {
