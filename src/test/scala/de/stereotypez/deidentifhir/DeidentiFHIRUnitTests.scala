@@ -3,6 +3,7 @@ package de.stereotypez.deidentifhir
 import ca.uhn.fhir.context.FhirContext
 import com.typesafe.config.ConfigFactory
 import de.stereotypez.deidentifhir.Deidentifhir.DeidentifhirHandler
+import de.stereotypez.deidentifhir.util.Handlers
 import org.hl7.fhir.instance.model.api.IPrimitiveType
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent
 import org.hl7.fhir.r4.model.Dosage.DosageDoseAndRateComponent
@@ -25,15 +26,17 @@ class DeidentiFHIRUnitTests extends AnyFunSuite {
 
     val module = Module(
       pattern = ResourceExistsPath("Patient"),
-      pathHandlers = Map("Patient.address.postalCode" -> Some(Seq(nullHandler))).asInstanceOf[MapOfPathHandlers],
+      pathHandlers = Map("Patient.address.postalCode" -> Some(Seq(nullHandler)),
+                         "Patient.address.city" -> Handlers.keepHandler).asInstanceOf[MapOfPathHandlers],
       typeHandlers = Map())
     val deidentiFHIR = new Deidentifhir(Seq(module))
 
     val patient = new Patient()
-    patient.addAddress(new Address().setPostalCode("4478"))
+    patient.addAddress(new Address().setPostalCode("44789").setCity("Bochum"))
     val pPatient : Patient = deidentiFHIR.deidentify(patient).asInstanceOf[Patient]
 
-    assert(pPatient.getAddress.size() == 0)
+    assert(pPatient.getAddress.size() == 1)
+    assert(pPatient.getAddress.get(0).hasPostalCode == false)
   }
 
   test("removal of empty elements") {
@@ -51,9 +54,31 @@ class DeidentiFHIRUnitTests extends AnyFunSuite {
     val deidentifhir = new Deidentifhir(Seq())
     val pEnc : Encounter = deidentifhir.deidentify(enc).asInstanceOf[Encounter]
 
-    assert(pEnc.hasExtension === false)
-    val jsonParser = FhirContext.forR4().newJsonParser().setPrettyPrint(true)
-    assert(!jsonParser.encodeResourceToString(pEnc).contains("null"))
+    assert(pEnc === null)
+  }
+
+  // if Patient.meta.profile will be of size 1 but all elements are null, serialization will fail
+  test("remove empty lists") {
+    val deidentifhir = new Deidentifhir(Seq())
+
+    val patient = new Patient()
+    patient.setMeta(new Meta().addProfile("dummyProfileURL"))
+    val pPatient : Patient = deidentifhir.deidentify(patient).asInstanceOf[Patient]
+
+    assert(pPatient == null)
+  }
+
+  test("remove empty resources from bundle") {
+    val inputBundle = new Bundle()
+    inputBundle.addEntry(new BundleEntryComponent().setResource(new Patient().setActive(true)))
+    inputBundle.addEntry(new BundleEntryComponent().setResource(new Patient().setId("123")))
+    inputBundle.addEntry(new BundleEntryComponent().setResource(new Patient()))
+    inputBundle.addEntry(new BundleEntryComponent().setResource(new Patient().setMeta(new Meta().setProfile(util.List.of(new CanonicalType("test"))))))
+
+    val deidentiFHIR = new Deidentifhir(Seq())
+
+    val outputBundle = deidentiFHIR.deidentify(inputBundle).asInstanceOf[Bundle]
+    assert(outputBundle.getEntry.size()==0)
   }
 
   test("extensions in source resource are not altered") {
@@ -69,8 +94,14 @@ class DeidentiFHIRUnitTests extends AnyFunSuite {
 
     val patient = new Patient()
     patient.addAddress(address)
+    patient.setActive(true)
 
-    val deidentifhir = new Deidentifhir(Seq())
+    val module = Module(
+      pattern = ResourceExistsPath("Patient"),
+      pathHandlers = Map("Patient.active" -> Handlers.keepHandler).asInstanceOf[MapOfPathHandlers],
+      typeHandlers = Map().asInstanceOf[MapOfTypeHandlers])
+
+    val deidentifhir = new Deidentifhir(Seq(module))
     val pPatient : Patient = deidentifhir.deidentify(patient).asInstanceOf[Patient]
 
     val extensions = patient.getAddressFirstRep.getExtension
@@ -171,19 +202,6 @@ class DeidentiFHIRUnitTests extends AnyFunSuite {
     patientWithTwoAdresses.addAddress(new Address().setPostalCode("45678"))
     val pPatient : Patient = deidentifhir.deidentify(patientWithTwoAdresses).asInstanceOf[Patient]
     assert(pPatient.getAddress.size() == 2)
-  }
-
-  // if Patient.meta.profile will be of size 1 but all elemnts are null, serialization will fail
-  test("remove empty lists") {
-    val deidentifhir = new Deidentifhir(Seq())
-
-    val patient = new Patient()
-    patient.setMeta(new Meta().addProfile("dummyProfileURL"))
-    val pPatient : Patient = deidentifhir.deidentify(patient).asInstanceOf[Patient]
-
-    val fctx = FhirContext.forR4()
-    val parser = fctx.newJsonParser().setPrettyPrint(true)
-    println(parser.encodeResourceToString(pPatient))
   }
 
   test("ChoiseOfType handling") {
@@ -456,17 +474,5 @@ class DeidentiFHIRUnitTests extends AnyFunSuite {
     obs4.setStatus(Observation.ObservationStatus.FINAL)
     val deidentified_obs4 = deidentiFHIR.deidentify(obs4).asInstanceOf[Observation]
     assert(deidentified_obs4==null)
-  }
-
-  test("remove empty resources from bundle") {
-    val inputBundle = new Bundle()
-    inputBundle.addEntry(new BundleEntryComponent().setResource(new Patient().setActive(true)))
-    inputBundle.addEntry(new BundleEntryComponent().setResource(new Patient().setId("123")))
-    inputBundle.addEntry(new BundleEntryComponent().setResource(new Patient()))
-
-    val deidentiFHIR = new Deidentifhir(Seq())
-
-    val outputBundle = deidentiFHIR.deidentify(inputBundle).asInstanceOf[Bundle]
-    assert(outputBundle.getEntry.size()==0)
   }
 }
