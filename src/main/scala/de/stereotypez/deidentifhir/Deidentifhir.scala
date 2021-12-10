@@ -56,6 +56,11 @@ object Deidentifhir {
 
 class Deidentifhir(modules: Seq[Module]) extends LazyLogging {
 
+  /**
+   * @param resource Either a resource or a whole bundle that should be de-identified.
+   * @return The de-identified resource or bundle. If all elements in a resource were removed, this method will return
+   *         <code>null</code>. If all resources in a bundle were removed, this method will return an empty bundle.
+   */
   def deidentify(resource: Resource): Resource = {
     resource match {
       case b: Bundle =>
