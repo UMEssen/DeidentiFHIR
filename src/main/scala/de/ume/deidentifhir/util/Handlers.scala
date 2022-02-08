@@ -1,5 +1,6 @@
 package de.ume.deidentifhir.util
 
+import ca.uhn.fhir.model.api.TemporalPrecisionEnum
 import de.ume.deidentifhir.Deidentifhir.DeidentifhirHandler
 import org.hl7.fhir.instance.model.api.IPrimitiveType
 import org.hl7.fhir.r4.model.{Base, DateType, IdType, Identifier, Resource, StringType}
@@ -25,15 +26,29 @@ object Handlers {
   val generalizePostalCodeHandler: Option[DeidentifhirHandler[StringType]] = Some(generalizePostalCode)
 
   /**
-   * Datum auf 15. des Monats setzen
+   * Set the day of the month to the 15th according to the MII/SMITH pseudonymization concept.
    */
-  def generalizeDate(path: Seq[String], date: DateType, context: Seq[Base]): DateType = {
-    date.setDay(15) // TODO check if this is 0 or 1 based
-    // TODO DateType can contain a time as well! delete this as well!
-    // println(date.getHour())
+  def generalizeDateHandler(path: Seq[String], date: DateType, context: Seq[Base]): DateType = {
+
+    val precision = date.getPrecision
+    precision match {
+      case TemporalPrecisionEnum.YEAR   => // do nothing if the precision is lower than DAY
+      case TemporalPrecisionEnum.MONTH  => // do nothing if the precision is lower than DAY
+      case TemporalPrecisionEnum.DAY    => date.setDay(15) // the day field is 1-indexed!
+      case TemporalPrecisionEnum.MINUTE => throw new Exception("Unexpected precision for object of type DateType!")
+      case TemporalPrecisionEnum.SECOND => throw new Exception("Unexpected precision for object of type DateType!")
+      case TemporalPrecisionEnum.MILLI  => throw new Exception("Unexpected precision for object of type DateType!")
+      case _                            => throw new Exception("Encountered an unknown precision!")
+    }
+
+    // even though the precision might only be DAY or lower, the object can hold a more specific time stamp:
+    date.setHour(0)
+    date.setMinute(0)
+    date.setSecond(0)
+    date.setMillis(0)
+
     date
   }
-  val generalizeDateHandler: Option[DeidentifhirHandler[DateType]] = Some(generalizeDate)
 
 //  /**
 //   * TODO

@@ -1,6 +1,6 @@
 package de.ume.deidentifhir.util
 
-import org.hl7.fhir.r4.model.{Base, IdType, Patient}
+import org.hl7.fhir.r4.model.{DateType, Patient}
 import org.scalatest.funsuite.AnyFunSuite
 
 class HandlersTests extends AnyFunSuite {
@@ -28,6 +28,25 @@ class HandlersTests extends AnyFunSuite {
 //    }
 //    assert(thrown.getMessage === "received unexpected type!")
 //  }
+
+  test("generalizeDateHandler") {
+    assert(Handlers.generalizeDateHandler(Seq(), new DateType("1905-08-23"), Seq()).getDay==15)
+
+    // check that the day is not set if the DateType has a lower precision
+    assert(Handlers.generalizeDateHandler(Seq(), new DateType("1905-08"), Seq()).getDay==1)
+
+    // remove high precision data
+    val date = new DateType("1905-08-23")
+    date.setHour(3)
+    date.setMinute(5)
+    date.setSecond(5)
+    date.setMillis(111)
+    val pDate = Handlers.generalizeDateHandler(Seq(), date, Seq())
+    assert(pDate.getHour==0)
+    assert(pDate.getMinute==0)
+    assert(pDate.getSecond==0)
+    assert(pDate.getMillis==0)
+  }
 
   test("idReplacementHandler") {
 
