@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>de.ume</groupId>
   <artifactId>deidentifhir</artifactId>
-  <version>0.2.6</version>
+  <version>0.2.7-SNAPSHOT</version>
   <name>${project.artifactId}</name>
   <description>Generic FHIR de-identification library based on HAPI FHIR</description>
   <inceptionYear>2020</inceptionYear>
