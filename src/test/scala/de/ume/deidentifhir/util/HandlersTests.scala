@@ -1,6 +1,6 @@
 package de.ume.deidentifhir.util
 
-import org.hl7.fhir.r4.model.{DateType, Patient}
+import org.hl7.fhir.r4.model.{Base, DateType, Patient, StringType}
 import org.scalatest.funsuite.AnyFunSuite
 
 class HandlersTests extends AnyFunSuite {
@@ -28,6 +28,11 @@ class HandlersTests extends AnyFunSuite {
 //    }
 //    assert(thrown.getMessage === "received unexpected type!")
 //  }
+
+  test("testStringReplacementHandler") {
+    val pString = Handlers.stringReplacementHandler("test")(Seq(), new StringType("toBeReplaced"), Seq())
+    assert(pString.getValue=="test")
+  }
 
   test("generalizeDateHandler") {
     assert(Handlers.generalizeDateHandler(Seq(), new DateType("1905-08-23"), Seq()).getDay==15)

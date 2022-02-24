@@ -2,8 +2,7 @@ package de.ume.deidentifhir.util
 
 import ca.uhn.fhir.model.api.TemporalPrecisionEnum
 import de.ume.deidentifhir.Deidentifhir.DeidentifhirHandler
-import org.hl7.fhir.instance.model.api.IPrimitiveType
-import org.hl7.fhir.r4.model.{Base, DateType, IdType, Identifier, Resource, StringType}
+import org.hl7.fhir.r4.model._
 object Handlers {
 
   /**
@@ -48,6 +47,13 @@ object Handlers {
     date.setMillis(0)
 
     date
+  }
+
+  /**
+   * Replaces the given string with a predefined static string.
+   */
+  def stringReplacementHandler(staticString: String)(path: Seq[String], string: StringType, context: Seq[Base]) = {
+    new StringType(staticString)
   }
 
 //  /**
