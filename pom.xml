@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>de.ume</groupId>
   <artifactId>deidentifhir</artifactId>
-  <version>0.2.7</version>
+  <version>0.2.8-SNAPSHOT</version>
   <name>${project.artifactId}</name>
   <description>Generic FHIR de-identification library based on HAPI FHIR</description>
   <inceptionYear>2020</inceptionYear>
@@ -22,7 +22,7 @@
     <scala.version.major>2.13</scala.version.major>
     <scala.version>${scala.version.major}.1</scala.version>
     <!-- hapi -->
-    <hapi.version>5.4.1</hapi.version>
+    <hapi.version>5.7.2</hapi.version>
   </properties>
 
   <build>
