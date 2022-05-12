@@ -56,18 +56,6 @@ object Handlers {
     new StringType(staticString)
   }
 
-//  /**
-//   * TODO
-//   */
-//  def generalizeDeceased(path: Seq[String], deceased: Type): Type = {
-//    deceased match {
-//      case value: BooleanType => value
-//      case value: DateType => value
-//      case _  => throw new Exception("received unexpected type!")
-//    }
-//  }
-//  val generalizeDeceasedHandler: Option[DeidentifhirHandler[Type]] = Some(generalizeDeceased)
-
   def referenceReplacementHandler(idReplacementProvider: IDReplacementProvider)(path: Seq[String], reference: StringType, context: Seq[Base]) = {
     reference.getValue match {
       case s"$resourceType/$idPart" => new StringType(s"$resourceType/${idReplacementProvider.getIDReplacement(resourceType, idPart)}")
@@ -97,5 +85,18 @@ object Handlers {
     }
 
     new StringType(identifierValueReplacementProvider.getValueReplacement(system, value.getValue()))
+  }
+
+  /**
+   * In addition to the functionality of the referenceReplacementHandler this handler also modifies conditional references
+   * which are only allowed in transaction bundles (https://www.hl7.org/fhir/http.html#trules).
+   *
+   * Right now, only search URIs that specify a system and an identifier are allowed: Patient?identifier=mySystem|12345
+   */
+  def conditionalReferencesReplacementHandler(idReplacementProvider: IDReplacementProvider, identifierValueReplacementProvider: IdentifierValueReplacementProvider)(path: Seq[String], reference: StringType, context: Seq[Base]): StringType = {
+    reference.getValue match {
+      case s"$resourceType?identifier=$identifierSystem|$identifierValue" => new StringType(s"$resourceType?identifier=$identifierSystem|${identifierValueReplacementProvider.getValueReplacement(identifierSystem, identifierValue)}")
+      case _                                                              => referenceReplacementHandler(idReplacementProvider)(path, reference, context)
+    }
   }
 }
