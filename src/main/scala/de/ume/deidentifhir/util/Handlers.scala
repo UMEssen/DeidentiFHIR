@@ -53,15 +53,15 @@ object Handlers {
 
 
   /**
-   * Set the day of the month to the 15th according to the MII/SMITH pseudonymization concept.
+   * Shift the date by given milliseconds (positive or negative).
    */
-  def shiftDateHandler(dateShiftValueProvider: shiftDateProvider)(path: Seq[String], date: BaseDateTimeType, context: Seq[Base]): BaseDateTimeType = {
+  def shiftDateHandler(dateShiftValueProvider: ShiftDateProvider)(path: Seq[String], date: BaseDateTimeType, context: Seq[Base]): BaseDateTimeType = {
     val dateValue = date.getValue
-    dateValue.setTime(dateValue.getTime + dateShiftValueProvider.getInt())
+    dateValue.setTime(dateValue.getTime + dateShiftValueProvider.getDateShiftingValueInMillis())
     date match {
       case _: DateType      => new DateType(dateValue, date.getPrecision)
-      case _: DateTimeType  => new DateTimeType(dateValue, date.getPrecision)
-      case _: InstantType   => new InstantType(dateValue, date.getPrecision)
+      case _: DateTimeType  => new DateTimeType(dateValue, date.getPrecision, date.getTimeZone)
+      case _: InstantType   => new InstantType(dateValue, date.getPrecision, date.getTimeZone)
     }
   }
 

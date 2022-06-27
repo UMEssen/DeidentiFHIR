@@ -1,7 +1,7 @@
 package de.ume.deidentifhir.util
 
 import ca.uhn.fhir.context.FhirContext
-import org.hl7.fhir.r4.model.{Base, DateType, Identifier, Observation, Patient, Reference, StringType}
+import org.hl7.fhir.r4.model.{Base, DateTimeType, DateType, Identifier, InstantType, Observation, Patient, Reference, StringType}
 import org.scalatest.funsuite.AnyFunSuite
 
 class HandlersTests extends AnyFunSuite {
@@ -28,6 +28,38 @@ class HandlersTests extends AnyFunSuite {
     assert(pDate.getMinute==0)
     assert(pDate.getSecond==0)
     assert(pDate.getMillis==0)
+  }
+
+  test("dateShiftValueReplacementHandler") {
+
+    assert(Handlers.shiftDateHandler(new ShiftDateProvider {
+      override def getDateShiftingValueInMillis(): java.lang.Long = 86399999 // not quite one day
+    })(Seq(),new DateType("1998-08-08"),Seq()).toString.equals("DateType[1998-08-08]"))
+
+    assert(Handlers.shiftDateHandler(new ShiftDateProvider {
+      override def getDateShiftingValueInMillis(): java.lang.Long = 86400000 // not quite one day
+    })(Seq(),new DateType("1998-08-08"),Seq()).toString.equals("DateType[1998-08-09]"))
+
+    assert(Handlers.shiftDateHandler(new ShiftDateProvider {
+      override def getDateShiftingValueInMillis(): java.lang.Long = 864000000 // 10 days
+    })(Seq(),new DateType("1998-08-08"),Seq()).toString.equals("DateType[1998-08-18]"))
+
+    assert(Handlers.shiftDateHandler(new ShiftDateProvider {
+      override def getDateShiftingValueInMillis(): java.lang.Long = 31535999999L // not quite one year
+    })(Seq(),new DateType("1998-08-08"),Seq()).toString.equals("DateType[1999-08-07]"))
+
+    assert(Handlers.shiftDateHandler(new ShiftDateProvider {
+      override def getDateShiftingValueInMillis(): java.lang.Long = 31536000000L // one year
+    })(Seq(),new DateType("1998-08-08"),Seq()).toString.equals("DateType[1999-08-08]"))
+
+    assert(Handlers.shiftDateHandler(new ShiftDateProvider {
+      override def getDateShiftingValueInMillis(): java.lang.Long = 864000000 // 10 days
+    })(Seq(),new DateTimeType("2022-06-23T13:46:02.665+00:00"),Seq()).toString.equals("DateTimeType[2022-07-03T13:46:02.665+00:00]"))
+
+    assert(Handlers.shiftDateHandler(new ShiftDateProvider {
+      override def getDateShiftingValueInMillis(): java.lang.Long = -10800000 // -3 hours
+    })(Seq(),new InstantType("2022-06-23T13:46:02.665+05:00"),Seq()).toString.equals("InstantType[2022-06-23T10:46:02.665+05:00]"))
+
   }
 
   test("idReplacementHandler") {

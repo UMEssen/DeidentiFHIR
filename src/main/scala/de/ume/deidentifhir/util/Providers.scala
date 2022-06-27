@@ -8,6 +8,6 @@ trait IdentifierValueReplacementProvider {
   def getValueReplacement(system: String, value: String) : String
 }
 
-trait shiftDateProvider {
-  def getInt(): java.lang.Long
+trait ShiftDateProvider {
+  def getDateShiftingValueInMillis(): java.lang.Long
 }
