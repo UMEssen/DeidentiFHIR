@@ -3,6 +3,8 @@ package de.ume.deidentifhir.util
 import ca.uhn.fhir.model.api.TemporalPrecisionEnum
 import de.ume.deidentifhir.Deidentifhir.DeidentifhirHandler
 import org.hl7.fhir.r4.model._
+
+import java.util.TimeZone
 object Handlers {
 
   /**
@@ -47,6 +49,20 @@ object Handlers {
     date.setMillis(0)
 
     date
+  }
+
+
+  /**
+   * Set the day of the month to the 15th according to the MII/SMITH pseudonymization concept.
+   */
+  def shiftDateHandler(dateShiftValueProvider: shiftDateProvider)(path: Seq[String], date: BaseDateTimeType, context: Seq[Base]): BaseDateTimeType = {
+    val dateValue = date.getValue
+    dateValue.setTime(dateValue.getTime + dateShiftValueProvider.getInt())
+    date match {
+      case _: DateType      => new DateType(dateValue, date.getPrecision)
+      case _: DateTimeType  => new DateTimeType(dateValue, date.getPrecision)
+      case _: InstantType   => new InstantType(dateValue, date.getPrecision)
+    }
   }
 
   /**
