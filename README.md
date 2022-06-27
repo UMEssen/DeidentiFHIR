@@ -87,6 +87,7 @@ Patterns are based on [FHIRPath](https://hl7.org/fhirpath/). However, currently 
 | referenceReplacementHandler       | StringType              |                                                                                                                                                      |
 | generalizePostalCode              | StringType              | Truncates the postal code to the first three digits, if the given postal code is five digits long. Otherwise, the postal code is removed altogether. |
 | generalizeDateHandler             | DateType                | Set the day of the month to the 15th according to the MII/SMITH pseudonymization concept.                                                            |
+| shiftDateHandler                  | BaseDateTimeType        | Shift the DateType, DateTimeType or InstantType by given milliseconds (positive or negative value).                                                  |
 | stringReplacementHandler          | StringType              | Replaces the given string with a predefined static string.                                                                                           |
 | ...                               |                         |                                                                                                                                                      |                          |                                                                                                                                                      |
 ### Add custom handlers
