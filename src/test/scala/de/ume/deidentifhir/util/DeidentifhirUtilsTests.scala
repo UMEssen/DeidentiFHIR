@@ -10,10 +10,10 @@ class DeidentifhirUtilsTests extends AnyFunSuite {
 
   test("merge path handlers from multiple modules") {
 
-    val h1: DeidentifhirHandler[Any] = (_: Seq[String], base: Any, _: Seq[Base]) => base
-    val h2: DeidentifhirHandler[Any] = (_: Seq[String], base: Any, _: Seq[Base]) => base
-    val h3: DeidentifhirHandler[Any] = (_: Seq[String], base: Any, _: Seq[Base]) => base
-    val h4: DeidentifhirHandler[Any] = (_: Seq[String], base: Any, _: Seq[Base]) => base
+    val h1: DeidentifhirHandler[Any] = (_: Seq[String], base: Any, _: Seq[Base], _: Map[String, String]) => base
+    val h2: DeidentifhirHandler[Any] = (_: Seq[String], base: Any, _: Seq[Base], _: Map[String, String]) => base
+    val h3: DeidentifhirHandler[Any] = (_: Seq[String], base: Any, _: Seq[Base], _: Map[String, String]) => base
+    val h4: DeidentifhirHandler[Any] = (_: Seq[String], base: Any, _: Seq[Base], _: Map[String, String]) => base
 
     val handlersFromModule1 = Some(Some(Seq(h1,h2))) // the module has multiple handler that should be applied
     val handlersFromModule2 = Some(Some(Seq(h3,h4)))

@@ -21,6 +21,16 @@ val pBundle : Bundle = deidentifhir.deidentify(bundle).asInstanceOf[Bundle]
 
 Instead of a whole bundle, you could also pass single resources to the call of `deidentify`. The given resource must be an instance of a [HAPI FHIR resource](https://hapifhir.io/hapi-fhir/apidocs/hapi-fhir-structures-r4/org/hl7/fhir/r4/model/Resource.html). 
 
+If a handler needs some additional input that should be provided to it during the call of `deidentify`, you can also pass some static context as a map: 
+
+```scala
+
+val staticContext = Map(Handlers.patientIdentifierKey->"1234567")
+
+// 4. De-identify a bundle.
+val pBundle : Bundle = deidentifhir.deidentify(bundle, staticContext).asInstanceOf[Bundle]
+```
+
 While it is the general goal of this library to not modify the given FHIR bundle, this is currently not true for resources that contain FHIR extensions.
 
 ## Configuration

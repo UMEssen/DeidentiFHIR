@@ -13,7 +13,7 @@ class AlwaysReturnValueMap[A, Int] extends immutable.Map[String, Option[Seq[Deid
   val log = new mutable.HashSet[String]()
 
   override def get(key: String): Option[Option[Seq[DeidentifhirHandler[Any]]]] = {
-    Some(Some(Seq((path: Seq[String], any: Any, context: Seq[Base]) => {
+    Some(Some(Seq((path: Seq[String], any: Any, context: Seq[Base], staticContext: Map[String, String]) => {
       //println(path)
       log.add(path.mkString("."))
       any

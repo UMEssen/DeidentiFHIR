@@ -9,5 +9,5 @@ trait IdentifierValueReplacementProvider {
 }
 
 trait ShiftDateProvider {
-  def getDateShiftingValueInMillis(): java.lang.Long
+  def getDateShiftingValueInMillis(key: String): java.lang.Long
 }
