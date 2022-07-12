@@ -26,7 +26,7 @@ object Deidentifhir {
   // 1. the path to the current element
   // 2. the current element
   // 3. a sequence of all elements from the root to the current element
-  // 4. a map of Strings that is static for each call of deidentify and can store a static context for the current de-identification run
+  // 4. a map of strings that is static for each call of deidentify and can store a static context for the current de-identification run
   type DeidentifhirHandler[T <: Any] = (Seq[String], T, Seq[Base], Map[String, String]) => T
 
   // TODO deduplicate code with the other apply method

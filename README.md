@@ -105,10 +105,11 @@ Patterns are based on [FHIRPath](https://hl7.org/fhirpath/). However, currently 
 Implementation of custom handlers is quite easy. You just need to define a function with the following signature:
 
 ```scala
-type DeidentifhirHandler[T <: Any] = (Seq[String], T, Seq[Base]) => T
+type DeidentifhirHandler[T <: Any] = (Seq[String], T, Seq[Base], Map[String, String]) => T
 ```
 
 Each handler gets passed
 1. the path to the current element,
 2. a copy (to avoid accidental mutation of the input) of the current element that should be processed 
 3. and a sequence of all elements from the root to the current element.
+4. a map of strings that is static for each call of deidentify and can store a static context for the current de-identification run
