@@ -28,7 +28,7 @@ object Handlers {
   /**
    * Set the day of the month to the 15th according to the MII/SMITH pseudonymization concept.
    */
-  def generalizeDateHandler(path: Seq[String], date: DateType, context: Seq[Base]): DateType = {
+  def generalizeDateHandler(path: Seq[String], date: DateType, context: Seq[Base], staticContext: Map[String, String]): DateType = {
 
     val precision = date.getPrecision
     precision match {
@@ -73,7 +73,7 @@ object Handlers {
   /**
    * Replaces the given string with a predefined static string.
    */
-  def stringReplacementHandler(staticString: String)(path: Seq[String], string: StringType, context: Seq[Base]) = {
+  def stringReplacementHandler(staticString: String)(path: Seq[String], string: StringType, context: Seq[Base], staticContext: Map[String, String]) = {
     new StringType(staticString)
   }
 

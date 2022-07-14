@@ -6,15 +6,15 @@ import org.scalatest.funsuite.AnyFunSuite
 class HandlersTests extends AnyFunSuite {
 
   test("testStringReplacementHandler") {
-    val pString = Handlers.stringReplacementHandler("test")(Seq(), new StringType("toBeReplaced"), Seq())
+    val pString = Handlers.stringReplacementHandler("test")(Seq(), new StringType("toBeReplaced"), Seq(), Map())
     assert(pString.getValue=="test")
   }
 
   test("generalizeDateHandler") {
-    assert(Handlers.generalizeDateHandler(Seq(), new DateType("1905-08-23"), Seq()).getDay==15)
+    assert(Handlers.generalizeDateHandler(Seq(), new DateType("1905-08-23"), Seq(), Map()).getDay==15)
 
     // check that the day is not set if the DateType has a lower precision
-    assert(Handlers.generalizeDateHandler(Seq(), new DateType("1905-08"), Seq()).getDay==1)
+    assert(Handlers.generalizeDateHandler(Seq(), new DateType("1905-08"), Seq(), Map()).getDay==1)
 
     // remove high precision data
     val date = new DateType("1905-08-23")
@@ -22,7 +22,7 @@ class HandlersTests extends AnyFunSuite {
     date.setMinute(5)
     date.setSecond(5)
     date.setMillis(111)
-    val pDate = Handlers.generalizeDateHandler(Seq(), date, Seq())
+    val pDate = Handlers.generalizeDateHandler(Seq(), date, Seq(), Map())
     assert(pDate.getHour==0)
     assert(pDate.getMinute==0)
     assert(pDate.getSecond==0)
