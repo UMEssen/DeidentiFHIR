@@ -31,7 +31,7 @@ val staticContext = Map(Handlers.patientIdentifierKey->"1234567")
 val pBundle : Bundle = deidentifhir.deidentify(bundle, staticContext).asInstanceOf[Bundle]
 ```
 
-While it is the general goal of this library to not modify the given FHIR bundle, this is currently not true for resources that contain FHIR extensions.
+The given FHIR bundle is not modified, but instead all changes are performed on a new object.
 
 ## Configuration
 
