@@ -3,6 +3,7 @@ package de.ume.deidentifhir.util
 import ca.uhn.fhir.model.api.TemporalPrecisionEnum
 import de.ume.deidentifhir.Deidentifhir.DeidentifhirHandler
 import org.hl7.fhir.r4.model._
+
 object Handlers {
 
   /**
@@ -13,7 +14,7 @@ object Handlers {
   /**
    * Truncates the postal code to the first three digits, if the given postal code is five digits long. Otherwise, the postal code is removed altogether.
    */
-  def generalizePostalCode(path: Seq[String], postalCode: StringType, context: Seq[Base]): StringType = {
+  def generalizePostalCode(path: Seq[String], postalCode: StringType, context: Seq[Base], staticContext: Map[String, String]): StringType = {
     postalCode.getValue match {
       case value if value.length == 5 => {
         postalCode.setValue(value.substring(0, 3))
@@ -49,6 +50,26 @@ object Handlers {
     date
   }
 
+  val patientIdentifierKey = "patientIdentifier"
+
+  /**
+   * Shift the date by given milliseconds (positive or negative).
+   */
+  def shiftDateHandler(shiftDateProvider: ShiftDateProvider)(path: Seq[String], date: BaseDateTimeType, context: Seq[Base], staticContext: Map[String, String]): BaseDateTimeType = {
+    staticContext.contains(patientIdentifierKey) match {
+      case true => {
+        val dateValue = date.getValue
+        dateValue.setTime(dateValue.getTime + shiftDateProvider.getDateShiftingValueInMillis(staticContext.get(patientIdentifierKey).get))
+        date match {
+          case _: DateType      => new DateType(dateValue, date.getPrecision)
+          case _: DateTimeType  => new DateTimeType(dateValue, date.getPrecision, date.getTimeZone)
+          case _: InstantType   => new InstantType(dateValue, date.getPrecision, date.getTimeZone)
+        }
+      }
+      case false => throw new Exception("The shiftDateHandler requires a patientIdentifier in the staticContext!")
+    }
+  }
+
   /**
    * Replaces the given string with a predefined static string.
    */
@@ -68,19 +89,19 @@ object Handlers {
 //  }
 //  val generalizeDeceasedHandler: Option[DeidentifhirHandler[Type]] = Some(generalizeDeceased)
 
-  def referenceReplacementHandler(idReplacementProvider: IDReplacementProvider)(path: Seq[String], reference: StringType, context: Seq[Base]) = {
+  def referenceReplacementHandler(idReplacementProvider: IDReplacementProvider)(path: Seq[String], reference: StringType, context: Seq[Base], staticContext: Map[String, String]) = {
     reference.getValue match {
       case s"$resourceType/$idPart" => new StringType(s"$resourceType/${idReplacementProvider.getIDReplacement(resourceType, idPart)}")
       case _  => throw new Exception("unexpected reference format. only relative references are supported right now!")
     }
   }
 
-  def idReplacementHandler(idReplacementProvider: IDReplacementProvider)(path: Seq[String], id: IdType, context: Seq[Base]) = {
+  def idReplacementHandler(idReplacementProvider: IDReplacementProvider)(path: Seq[String], id: IdType, context: Seq[Base], staticContext: Map[String, String]) = {
     val resourceType = context.head.asInstanceOf[Resource].getResourceType.toString
     new IdType(id.getResourceType, idReplacementProvider.getIDReplacement(resourceType, id.getIdPart))
   }
 
-  def identifierValueReplacementHandler(identifierValueReplacementProvider: IdentifierValueReplacementProvider, acceptNoSystem: Boolean)(path: Seq[String], value: StringType, context: Seq[Base]) = {
+  def identifierValueReplacementHandler(identifierValueReplacementProvider: IdentifierValueReplacementProvider, acceptNoSystem: Boolean)(path: Seq[String], value: StringType, context: Seq[Base], staticContext: Map[String, String]) = {
 
     // the value is not unique on its own. therefore, we need to determine the identifiers system and use this as a prefix.
     val identifier = context.last.asInstanceOf[Identifier]

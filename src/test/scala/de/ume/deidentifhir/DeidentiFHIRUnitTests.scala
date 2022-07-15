@@ -20,7 +20,7 @@ class DeidentiFHIRUnitTests extends AnyFunSuite {
   type MapOfTypeHandlers = Map[Class[_], Option[Seq[DeidentifhirHandler[Any]]]]
 
   // this handler returns always null
-  val nullHandler: DeidentifhirHandler[Base] = (_: Seq[String], _: Base, context: Seq[Base]) => {null}
+  val nullHandler: DeidentifhirHandler[Base] = (_: Seq[String], _: Base, _: Seq[Base], _: Map[String, String]) => {null}
 
   test("handler returns null") {
 
@@ -296,9 +296,9 @@ class DeidentiFHIRUnitTests extends AnyFunSuite {
 
     val executionOrder = new ListBuffer[String]()
 
-    val firstPathHandler: DeidentifhirHandler[Base] = (_: Seq[String], base: Base, context: Seq[Base]) => {executionOrder.append("first"); base}
-    val secondPathHandler: DeidentifhirHandler[Base] = (_: Seq[String], base: Base, context: Seq[Base]) => {executionOrder.append("second"); base}
-    val typeHandler: DeidentifhirHandler[BooleanType] = (_: Seq[String], base: BooleanType, context: Seq[Base]) => {executionOrder.append("type"); base}
+    val firstPathHandler: DeidentifhirHandler[Base] = (_: Seq[String], base: Base, context: Seq[Base], staticContext: Map[String, String]) => {executionOrder.append("first"); base}
+    val secondPathHandler: DeidentifhirHandler[Base] = (_: Seq[String], base: Base, context: Seq[Base], staticContext: Map[String, String]) => {executionOrder.append("second"); base}
+    val typeHandler: DeidentifhirHandler[BooleanType] = (_: Seq[String], base: BooleanType, context: Seq[Base], staticContext: Map[String, String]) => {executionOrder.append("type"); base}
 
     val module = Module(
       pattern = ResourceExistsPath("Patient"),
@@ -319,7 +319,7 @@ class DeidentiFHIRUnitTests extends AnyFunSuite {
     val parser = FhirContext.forR4().newJsonParser().setPrettyPrint(true)
     val diagnosticReport = parser.parseResource(parser.encodeResourceToString(initial)).asInstanceOf[Resource]
 
-    val idTypeHandler: DeidentifhirHandler[IdType] = (_: Seq[String], _: IdType, _: Seq[Base]) => {
+    val idTypeHandler: DeidentifhirHandler[IdType] = (_: Seq[String], _: IdType, _: Seq[Base], _: Map[String, String]) => {
       new IdType("pseudo")
     }
 
@@ -360,7 +360,7 @@ class DeidentiFHIRUnitTests extends AnyFunSuite {
 //    extension.setValue(new StringType("test"))
 //    address.addExtension(extension)
 
-    val assertionsForContextHandler = (_: Seq[String], base: Base, context: Seq[Base]) => {
+    val assertionsForContextHandler = (_: Seq[String], base: Base, context: Seq[Base], _: Map[String, String]) => {
       assert(context.size==2)
       assert(context(0) == patient)
       assert(context(1) == address)
