@@ -114,10 +114,10 @@ object Handlers {
    *
    * Right now, only search URIs that specify a system and an identifier are allowed: Patient?identifier=mySystem|12345
    */
-  def conditionalReferencesReplacementHandler(idReplacementProvider: IDReplacementProvider, identifierValueReplacementProvider: IdentifierValueReplacementProvider)(path: Seq[String], reference: StringType, context: Seq[Base]): StringType = {
+  def conditionalReferencesReplacementHandler(idReplacementProvider: IDReplacementProvider, identifierValueReplacementProvider: IdentifierValueReplacementProvider)(path: Seq[String], reference: StringType, context: Seq[Base], staticContext: Map[String, String]): StringType = {
     reference.getValue match {
       case s"$resourceType?identifier=$identifierSystem|$identifierValue" => new StringType(s"$resourceType?identifier=$identifierSystem|${identifierValueReplacementProvider.getValueReplacement(identifierSystem, identifierValue)}")
-      case _                                                              => referenceReplacementHandler(idReplacementProvider)(path, reference, context)
+      case _                                                              => referenceReplacementHandler(idReplacementProvider)(path, reference, context, staticContext)
     }
   }
 }

@@ -123,11 +123,11 @@ class HandlersTests extends AnyFunSuite {
 
     val obs = new Observation()
     obs.setSubject(new Reference("Patient/123"))
-    val pRef = Handlers.conditionalReferencesReplacementHandler(idReplacementProvider, identifierValueReplacementProvider)(Seq("observation"), obs.getSubject.getReferenceElement_, Seq(obs))
+    val pRef = Handlers.conditionalReferencesReplacementHandler(idReplacementProvider, identifierValueReplacementProvider)(Seq("observation"), obs.getSubject.getReferenceElement_, Seq(obs),Map())
     assert(pRef.getValue.equals("Patient/456"))
 
     obs.setSubject(new Reference("Patient?identifier=mySystem|12345"))
-    val pRef2 = Handlers.conditionalReferencesReplacementHandler(idReplacementProvider, identifierValueReplacementProvider)(Seq("observation"), obs.getSubject.getReferenceElement_, Seq(obs))
+    val pRef2 = Handlers.conditionalReferencesReplacementHandler(idReplacementProvider, identifierValueReplacementProvider)(Seq("observation"), obs.getSubject.getReferenceElement_, Seq(obs),Map())
     assert(pRef2.getValue.equals("Patient?identifier=mySystem|67890"))
   }
 }
