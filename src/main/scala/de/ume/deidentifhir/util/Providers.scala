@@ -7,3 +7,7 @@ trait IDReplacementProvider {
 trait IdentifierValueReplacementProvider {
   def getValueReplacement(system: String, value: String) : String
 }
+
+trait ShiftDateProvider {
+  def getDateShiftingValueInMillis(key: String): java.lang.Long
+}

@@ -22,7 +22,7 @@ class ModuleBuilderTests extends AnyFunSuite {
     """.stripMargin)
 
     val registry = new Registry()
-    registry.addHander("dummy", (path: Seq[String], date: DateType, context: Seq[Base]) => date)
+    registry.addHander("dummy", (_: Seq[String], date: DateType, _: Seq[Base], _: Map[String, String]) => date)
 
     assertThrows[ClassNotFoundException] {
       val module = ModuleBuilder(config, registry).build()
@@ -58,7 +58,7 @@ class ModuleBuilderTests extends AnyFunSuite {
     """.stripMargin)
 
     val registry = new Registry()
-    registry.addHander("dummy", (path: Seq[String], date: DateType, context: Seq[Base]) => date)
+    registry.addHander("dummy", (_: Seq[String], date: DateType, _: Seq[Base], _: Map[String, String]) => date)
 
     val module = ModuleBuilder(config, registry).build()
 
@@ -91,7 +91,7 @@ class ModuleBuilderTests extends AnyFunSuite {
     assert(handlers.isDefined && handlers.get.isDefined && handlers.get.get.size==2)
   }
 
-  val dummyHandler: Option[DeidentifhirHandler[Base]] = Some((path: Seq[String], base: Base, context: Seq[Base]) => base)
+  val dummyHandler: Option[DeidentifhirHandler[Base]] = Some((_: Seq[String], base: Base, _: Seq[Base], _: Map[String, String]) => base)
 
   ignore("load profile with non existing FHIR paths") {
     val config = ConfigFactory.parseString(

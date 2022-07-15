@@ -21,6 +21,16 @@ val pBundle : Bundle = deidentifhir.deidentify(bundle).asInstanceOf[Bundle]
 
 Instead of a whole bundle, you could also pass single resources to the call of `deidentify`. The given resource must be an instance of a [HAPI FHIR resource](https://hapifhir.io/hapi-fhir/apidocs/hapi-fhir-structures-r4/org/hl7/fhir/r4/model/Resource.html). 
 
+If a handler needs some additional input that should be provided to it during the call of `deidentify`, you can also pass some static context as a map: 
+
+```scala
+
+val staticContext = Map(Handlers.patientIdentifierKey->"1234567")
+
+// 4. De-identify a bundle.
+val pBundle : Bundle = deidentifhir.deidentify(bundle, staticContext).asInstanceOf[Bundle]
+```
+
 While it is the general goal of this library to not modify the given FHIR bundle, this is currently not true for resources that contain FHIR extensions.
 
 ## Configuration
@@ -87,6 +97,7 @@ Patterns are based on [FHIRPath](https://hl7.org/fhirpath/). However, currently 
 | referenceReplacementHandler       | StringType              |                                                                                                                                                      |
 | generalizePostalCode              | StringType              | Truncates the postal code to the first three digits, if the given postal code is five digits long. Otherwise, the postal code is removed altogether. |
 | generalizeDateHandler             | DateType                | Set the day of the month to the 15th according to the MII/SMITH pseudonymization concept.                                                            |
+| shiftDateHandler                  | BaseDateTimeType        | Shift the DateType, DateTimeType or InstantType by given milliseconds (positive or negative value).                                                  |
 | stringReplacementHandler          | StringType              | Replaces the given string with a predefined static string.                                                                                           |
 | ...                               |                         |                                                                                                                                                      |                          |                                                                                                                                                      |
 ### Add custom handlers
@@ -94,10 +105,11 @@ Patterns are based on [FHIRPath](https://hl7.org/fhirpath/). However, currently 
 Implementation of custom handlers is quite easy. You just need to define a function with the following signature:
 
 ```scala
-type DeidentifhirHandler[T <: Any] = (Seq[String], T, Seq[Base]) => T
+type DeidentifhirHandler[T <: Any] = (Seq[String], T, Seq[Base], Map[String, String]) => T
 ```
 
 Each handler gets passed
 1. the path to the current element,
 2. a copy (to avoid accidental mutation of the input) of the current element that should be processed 
 3. and a sequence of all elements from the root to the current element.
+4. a map of strings that is static for each call of deidentify and can store a static context for the current de-identification run
