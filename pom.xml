@@ -183,11 +183,7 @@
     <repository>
       <id>Dcm4Che</id>
       <name>Dcm4Che Repository</name>
-      <url>https://www.dcm4che.org/maven2/</url>
-    </repository>
-    <repository>
-      <id>git.smith.care</id>
-      <url>https://git.smith.care/api/v4/projects/135/packages/maven</url>
+      <url>https://maven.scijava.org/content/repositories/public/</url>
     </repository>
   </repositories>
 
@@ -248,7 +244,7 @@
     <dependency>
       <groupId>org.dcm4che</groupId>
       <artifactId>dcm4che-core</artifactId>
-      <version>5.23.0</version>
+      <version>5.23.2</version>
     </dependency>
     <dependency>
       <groupId>org.specs2</groupId>
