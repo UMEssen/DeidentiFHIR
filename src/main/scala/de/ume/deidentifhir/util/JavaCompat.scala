@@ -1,7 +1,7 @@
 package de.ume.deidentifhir.util
 
 import de.ume.deidentifhir.Deidentifhir.DeidentifhirHandler
-import org.hl7.fhir.r4.model.{Base, Resource}
+import org.hl7.fhir.r4.model.Base
 
 import java.util.function.BiFunction
 

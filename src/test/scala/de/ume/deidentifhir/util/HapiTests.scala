@@ -1,10 +1,7 @@
 package de.ume.deidentifhir.util
 
-import org.hl7.fhir.r4.model.Narrative.NarrativeStatus
-import org.hl7.fhir.r4.model.{Annotation, HumanName, ImagingStudy, Narrative, Observation, Period, StringType}
+import org.hl7.fhir.r4.model.{Annotation, HumanName, Period, StringType}
 import org.scalatest.funsuite.AnyFunSuite
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
 
 import java.util.Date
 

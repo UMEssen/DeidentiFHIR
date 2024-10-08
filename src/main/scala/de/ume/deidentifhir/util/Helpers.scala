@@ -6,7 +6,7 @@ import org.hl7.fhir.r4.model.BaseDateTimeType
 import scala.jdk.DurationConverters._
 import java.time.ZonedDateTime
 import scala.concurrent.duration.FiniteDuration
-import org.dcm4che3.util.{TagUtils, UIDUtils}
+import org.dcm4che3.util.UIDUtils
 
 object Helpers {
 

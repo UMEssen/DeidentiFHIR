@@ -5,7 +5,6 @@ import de.ume.deidentifhir.Deidentifhir.DeidentifhirHandler
 import de.ume.deidentifhir.ModuleBuilder.determineBaseProfilePaths
 import de.ume.deidentifhir.util.DeidentifhirUtils.determinePattern
 import de.ume.deidentifhir.util.Handlers
-import org.hl7.fhir.r4.model.{DateTimeType, DateType, InstantType}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -37,7 +36,7 @@ class ModuleBuilder(pattern: FhirPath, fullProfilePaths: Seq[String]) {
   private val typeHandlers = new mutable.HashMap[Class[_], Option[Seq[DeidentifhirHandler[Any]]]]()
   private val pathHandlers = new mutable.HashMap[String, Option[Seq[DeidentifhirHandler[Any]]]]()
 
-  def this(conf: Config, registry: Registry) {
+  def this(conf: Config, registry: Registry) = {
     this(determinePattern(conf.getString("pattern")), determineBaseProfilePaths(conf))
 
     val base = conf.getList("base")
