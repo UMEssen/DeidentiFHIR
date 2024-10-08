@@ -2,12 +2,9 @@ package de.ume.deidentifhir.util
 
 import de.ume.deidentifhir.Deidentifhir.DeidentifhirHandler
 import de.ume.deidentifhir.{ApplyAlways, FhirPath, IdentifierSystemFhirPath, ProfileFhirPath, ResourceExistsPath}
-import org.hl7.fhir.instance.model.api.{IBaseHasExtensions, IBaseHasModifierExtensions, IBaseResource}
-import org.hl7.fhir.r4.model.{BaseResource, Identifier, Resource}
+import org.hl7.fhir.r4.model.{Identifier, Resource}
 
 import scala.jdk.CollectionConverters.CollectionHasAsScala
-import scala.reflect.ClassTag
-import scala.reflect.internal.ClassfileConstants.instanceof
 
 object DeidentifhirUtils {
 

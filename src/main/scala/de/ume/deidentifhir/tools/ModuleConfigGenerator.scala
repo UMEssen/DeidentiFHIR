@@ -11,7 +11,7 @@ import scopt.OParser
 import java.io.{File, FileInputStream, PrintWriter}
 import java.nio.file.Path
 import java.util
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object ModuleConfigGenerator {
 

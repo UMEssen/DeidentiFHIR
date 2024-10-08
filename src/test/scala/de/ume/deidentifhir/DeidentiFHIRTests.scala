@@ -53,7 +53,7 @@ class DeidentiFHIRTests extends AnyWordSpec with Matchers {
       """.stripMargin)
   val deidentifhir = Deidentifhir(config)
 
-  new Reflections("", new ResourcesScanner()).getResources(Pattern.compile(".*\\.in\\.json")).asScala
+  new Reflections("not-used", new ResourcesScanner()).getResources(Pattern.compile(".*\\.in\\.json")).asScala
     .foreach {
       case s"$name.in.json" =>
 
