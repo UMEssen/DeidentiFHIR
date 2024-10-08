@@ -186,10 +186,6 @@
       <name>Dcm4Che Repository</name>
       <url>https://www.dcm4che.org/maven2/</url>
     </repository>
-    <repository>
-      <id>git.smith.care</id>
-      <url>https://git.smith.care/api/v4/projects/135/packages/maven</url>
-    </repository>
   </repositories>
 
   <pluginRepositories>
