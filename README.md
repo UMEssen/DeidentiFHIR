@@ -10,7 +10,7 @@ val config = ConfigFactory.parseFile(new File("/path/to/DeidentiFHIR.conf"))
 
 // 2. Create a registry to provide implementations of handlers that are used in the config above.
 val registry = new Registry()
-registry.addHander("generalizePostalCode", Handlers.generalizePostalCode)
+registry.addHandler("generalizePostalCode", Handlers.generalizePostalCode)
 
 // 3. Construct an instance of DeidentiFHIR based on the config above.
 val deidentifhir = Deidentifhir(config, registry)
