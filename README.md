@@ -1,4 +1,7 @@
 # DeidentiFHIR
+
+[![Affiliated with RTG WisPerMed](https://img.shields.io/badge/Affiliated-RTG%202535%20WisPerMed-blue)](https://wispermed.org/)
+
 DeidentiFHIR is a generic FHIR de-identification library based on HAPI FHIR. It can process complete FHIR R4 bundles or single FHIR R4 resources.
 DeidentiFHIR iterates recursively over the given resources and checks for each element how it should be processed based on the specified configuration. 
 
