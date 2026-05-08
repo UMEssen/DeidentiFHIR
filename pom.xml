@@ -16,6 +16,7 @@
 
   <modules>
     <module>core</module>
+    <module>pii-openai</module>
   </modules>
 
   <properties>
@@ -27,6 +28,9 @@
     <scala.version>${scala.version.major}.15</scala.version>
     <!-- hapi -->
     <hapi.version>7.4.3</hapi.version>
+    <!-- pii-openai stack: DJL + ONNX Runtime for embedded model load -->
+    <djl.version>0.30.0</djl.version>
+    <onnxruntime.version>1.25.0</onnxruntime.version>
   </properties>
 
   <build>
