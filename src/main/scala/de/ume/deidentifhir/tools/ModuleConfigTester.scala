@@ -72,10 +72,10 @@ object ModuleConfigTester {
     val config = ConfigFactory.parseFile(arguments.moduleConfigFile.toFile)
     val registry = new Registry()
     // provide dummy implementations for all handlers
-    registry.addHander("idReplacementHandler", Handlers.idReplacementHandler(DummyReplacementProvider))
-    registry.addHander("referenceReplacementHandler", Handlers.referenceReplacementHandler(DummyReplacementProvider))
-    registry.addHander("identifierValueReplacementHandler", Handlers.identifierValueReplacementHandler(DummyReplacementProvider, true))
-    registry.addHander("generalizePostalCode", Handlers.generalizePostalCode)
+    registry.addHandler("idReplacementHandler", Handlers.idReplacementHandler(DummyReplacementProvider))
+    registry.addHandler("referenceReplacementHandler", Handlers.referenceReplacementHandler(DummyReplacementProvider))
+    registry.addHandler("identifierValueReplacementHandler", Handlers.identifierValueReplacementHandler(DummyReplacementProvider, true))
+    registry.addHandler("generalizePostalCode", Handlers.generalizePostalCode)
 
     val module = ModuleBuilder(config, registry).build()
     val deidentifhir = new Deidentifhir(Seq(module))

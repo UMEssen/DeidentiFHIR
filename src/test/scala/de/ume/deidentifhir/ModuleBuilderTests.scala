@@ -22,7 +22,7 @@ class ModuleBuilderTests extends AnyFunSuite {
     """.stripMargin)
 
     val registry = new Registry()
-    registry.addHander("dummy", (_: Seq[String], date: DateType, _: Seq[Base], _: Map[String, String]) => date)
+    registry.addHandler("dummy", (_: Seq[String], date: DateType, _: Seq[Base], _: Map[String, String]) => date)
 
     assertThrows[ClassNotFoundException] {
       val module = ModuleBuilder(config, registry).build()
@@ -58,7 +58,7 @@ class ModuleBuilderTests extends AnyFunSuite {
     """.stripMargin)
 
     val registry = new Registry()
-    registry.addHander("dummy", (_: Seq[String], date: DateType, _: Seq[Base], _: Map[String, String]) => date)
+    registry.addHandler("dummy", (_: Seq[String], date: DateType, _: Seq[Base], _: Map[String, String]) => date)
 
     val module = ModuleBuilder(config, registry).build()
 

@@ -34,8 +34,8 @@ class BuilderTests extends AnyFunSuite {
     """.stripMargin)
 
     val registry = new Registry()
-    registry.addHander("generalizePostalCode", Handlers.generalizePostalCode)
-    registry.addHander("replaceWithPseudonym", Handlers.idReplacementHandler(new THS())) // this is just a dummy to ensure that the registration is working
+    registry.addHandler("generalizePostalCode", Handlers.generalizePostalCode)
+    registry.addHandler("replaceWithPseudonym", Handlers.idReplacementHandler(new THS())) // this is just a dummy to ensure that the registration is working
 
     val deidentifhir = Deidentifhir(config, registry)
 
