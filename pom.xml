@@ -16,6 +16,8 @@
 
   <modules>
     <module>core</module>
+    <module>pii-openai</module>
+    <module>service-http</module>
   </modules>
 
   <properties>
@@ -27,6 +29,16 @@
     <scala.version>${scala.version.major}.15</scala.version>
     <!-- hapi -->
     <hapi.version>7.4.3</hapi.version>
+    <!-- pii-openai stack: DJL + ONNX Runtime for embedded model load -->
+    <djl.version>0.30.0</djl.version>
+    <onnxruntime.version>1.25.0</onnxruntime.version>
+    <!-- service-http stack: pekko-http + YAML config -->
+    <pekko.version>1.1.5</pekko.version>
+    <pekko.http.version>1.1.0</pekko.http.version>
+    <snakeyaml.version>2.3</snakeyaml.version>
+    <!-- Default for the service-http docker integration gate. Override with
+         -Ddeidentifhir.service.docker=1 to actually run the dockerized suite. -->
+    <deidentifhir.service.docker>0</deidentifhir.service.docker>
   </properties>
 
   <build>
