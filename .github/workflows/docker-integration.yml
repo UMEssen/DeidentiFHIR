@@ -1,0 +1,55 @@
+name: Docker integration test
+
+# Runs the service-http dockerized integration suite, which builds the actual
+# Docker image and exercises the FHIR $deidentify operation against a running
+# container. Complements maven.yml — that workflow runs unit tests; this one
+# proves the ship artifact (Dockerfile + jar layout + pekko binding) works
+# end-to-end on the CI's Linux Docker daemon.
+#
+# Pii-openai integration tests stay opt-in and aren't run here — they'd
+# download ~2.85 GB of model weights every CI run.
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  docker-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      # GitHub-hosted Linux runners come with Docker preinstalled and the API
+      # socket available without restrictions (no Enhanced Container Isolation
+      # — that's a Docker Desktop concept that doesn't apply on Linux).
+      - name: Verify Docker is reachable
+        run: docker info | head -5
+
+      - name: Build (no tests yet)
+        run: mvn -B install -DskipTests
+
+      # Runs all unit suites + ServiceDockerIntegrationTests (which Testcontainers
+      # builds the image for and exercises end-to-end). The pii-openai
+      # integration suite stays cancelled — it would download ~2.85 GB.
+      - name: Test
+        run: mvn -B test -Ddeidentifhir.service.docker=1
+
+      - name: Upload ScalaTest reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scalatest-reports
+          path: '**/target/surefire-reports/'
+          if-no-files-found: ignore

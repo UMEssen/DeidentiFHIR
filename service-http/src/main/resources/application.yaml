@@ -1,0 +1,41 @@
+# Default config bundled with the deidentifhir-service-http jar.
+#
+# Override at runtime by passing a path as the first CLI arg, by setting the
+# DEIDENTIFHIR_CONFIG env var, or by placing a file named `application.yaml`
+# in the working directory.
+#
+# This default does NOT use the openai/privacy-filter — that handler is
+# referenced only when explicitly added to a profile, and the model is only
+# loaded if at least one profile references it. Replace the example profile
+# below with whatever makes sense for your data.
+
+service:
+  host: 0.0.0.0
+  port: 8080
+
+# Optional. Only consulted if any profile references handler: redact-pii.
+# Otherwise the openai/privacy-filter is never even instantiated.
+#
+# pii-openai:
+#   cache-dir: /var/lib/deidentifhir-pii   # default: ~/.cache/deidentifhir-pii
+#   min-score: 0.5
+#   prewarm: false                          # if true, load model at startup
+
+profiles:
+  default:
+    paths:
+      # Whitelist semantics: anything not listed here is removed.
+      - { path: "Patient",                                          handler: passthrough }
+      - { path: "Patient.id",                                       handler: sha256 }
+      - { path: "Patient.gender",                                   handler: passthrough }
+      - { path: "Patient.birthDate",                                handler: date-shift, days: -7 }
+      - { path: "Patient.deceased[boolean]",                        handler: passthrough }
+      - { path: "Patient.deceased[dateTime]",                       handler: date-shift, days: -7 }
+
+      - { path: "Observation",                                      handler: passthrough }
+      - { path: "Observation.id",                                   handler: sha256 }
+      - { path: "Observation.status",                               handler: passthrough }
+      - { path: "Observation.code",                                 handler: passthrough }
+      - { path: "Observation.subject",                              handler: passthrough }
+      - { path: "Observation.effective[dateTime]",                  handler: date-shift, days: -7 }
+      - { path: "Observation.value[Quantity]",                      handler: passthrough }

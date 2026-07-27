@@ -1,0 +1,15 @@
+# Don't ship build output, IDE state, or local-machine clutter into the
+# Docker build context. Maven builds inside the build stage anyway.
+
+**/target/
+**/.idea/
+**/*.iml
+.git/
+.gitignore
+.claude/
+*.bak
+*.old
+.DS_Store
+
+# Don't recurse the m2 cache if someone happens to keep one in-tree.
+.m2/
