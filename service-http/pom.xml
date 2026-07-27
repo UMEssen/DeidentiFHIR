@@ -1,0 +1,200 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>de.ume</groupId>
+    <artifactId>deidentifhir-parent</artifactId>
+    <version>0.2.11</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>deidentifhir-service-http</artifactId>
+  <name>${project.artifactId}</name>
+  <description>HTTP microservice exposing the FHIR $deidentify operation backed by DeidentiFHIR. Pekko-http + YAML config + an opt-in pii-openai handler.</description>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-deploy-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.scalatest</groupId>
+        <artifactId>scalatest-maven-plugin</artifactId>
+        <configuration>
+          <!-- scalatest-maven-plugin defaults to forking the test JVM, so
+               -D properties from mvn don't reach the test process unless
+               explicitly forwarded. ServiceDockerIntegrationTests gates on
+               sys.props.get("deidentifhir.service.docker"), so it would
+               otherwise stay cancelled even when the flag is set. -->
+          <systemProperties>
+            <deidentifhir.service.docker>${deidentifhir.service.docker}</deidentifhir.service.docker>
+          </systemProperties>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>scala-maven-plugin</artifactId>
+      </plugin>
+      <!-- Layered packaging: thin jar + lib/ sidecar. We avoid the shaded
+           fat-jar approach because pekko's reference.conf doesn't merge
+           cleanly under maven-shade-plugin's AppendingTransformer (the
+           merged HOCON drops keys like `pekko.version`). -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.4.1</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>de.ume.deidentifhir.service.Main</mainClass>
+              <addClasspath>true</addClasspath>
+              <classpathPrefix>lib/</classpathPrefix>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>3.6.1</version>
+        <executions>
+          <execution>
+            <id>copy-dependencies</id>
+            <phase>package</phase>
+            <goals><goal>copy-dependencies</goal></goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/lib</outputDirectory>
+              <includeScope>runtime</includeScope>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <dependencies>
+
+    <dependency>
+      <groupId>de.ume</groupId>
+      <artifactId>deidentifhir</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>de.ume</groupId>
+      <artifactId>deidentifhir-pii-openai</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+      <version>${scala.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.pekko</groupId>
+      <artifactId>pekko-http_${scala.version.major}</artifactId>
+      <version>${pekko.http.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.pekko</groupId>
+      <artifactId>pekko-stream_${scala.version.major}</artifactId>
+      <version>${pekko.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.pekko</groupId>
+      <artifactId>pekko-actor-typed_${scala.version.major}</artifactId>
+      <version>${pekko.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.pekko</groupId>
+      <artifactId>pekko-slf4j_${scala.version.major}</artifactId>
+      <version>${pekko.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.yaml</groupId>
+      <artifactId>snakeyaml</artifactId>
+      <version>${snakeyaml.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.typesafe.scala-logging</groupId>
+      <artifactId>scala-logging_${scala.version.major}</artifactId>
+      <version>3.9.5</version>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>1.5.8</version>
+    </dependency>
+
+    <!-- Pinned at compile scope (NOT test) so they survive into target/lib/.
+         Testcontainers' tar staging needs commons-lang3 ≥ 3.13 (SystemProperties)
+         and commons-io ≥ 2.12 (FileTimes); HAPI's transitive resolution lands
+         on older versions. A test-scoped pin would win Maven mediation but
+         then dependency:copy-dependencies -DincludeScope=runtime drops it,
+         so the container starts with NoClassDefFoundError on HAPI's
+         StringUtils call. Compile scope keeps both jars in lib/. -->
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.17.0</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>2.16.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.scalatest</groupId>
+      <artifactId>scalatest_2.13</artifactId>
+      <version>3.2.19</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.pekko</groupId>
+      <artifactId>pekko-http-testkit_${scala.version.major}</artifactId>
+      <version>${pekko.http.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.pekko</groupId>
+      <artifactId>pekko-actor-testkit-typed_${scala.version.major}</artifactId>
+      <version>${pekko.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- Testcontainers for the dockerized integration test. Gated at runtime
+         by -Ddeidentifhir.service.docker=1, so a Docker daemon is only
+         required when that flag is set. -->
+    <dependency>
+      <groupId>com.dimafeng</groupId>
+      <artifactId>testcontainers-scala-scalatest_${scala.version.major}</artifactId>
+      <version>0.41.4</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- slf4j-simple in test scope so testcontainers' diagnostic output
+         binds and surfaces. Logback is in compile scope but its 1.5 line
+         binds against slf4j-api 2.x via ServiceLoader, which competes with
+         slf4j-simple at test time — we pick simple to keep test logs
+         deterministic and decoupled from any runtime logback.xml. -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <version>2.0.16</version>
+      <scope>test</scope>
+    </dependency>
+
+  </dependencies>
+
+</project>

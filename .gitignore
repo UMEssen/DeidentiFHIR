@@ -39,3 +39,6 @@ build.log
 
 #SHITTY output not in target directory
 build.log
+
+# Claude Code local state (per-repo settings, not shared)
+.claude/
