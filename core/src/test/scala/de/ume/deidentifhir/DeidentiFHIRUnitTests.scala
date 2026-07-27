@@ -368,7 +368,7 @@ class DeidentiFHIRUnitTests extends AnyFunSuite {
     }
 
     val registry = new Registry()
-    registry.addHander("assertionsForContextHandler", assertionsForContextHandler)
+    registry.addHandler("assertionsForContextHandler", assertionsForContextHandler)
 
     val config = ConfigFactory.parseString(
       """
